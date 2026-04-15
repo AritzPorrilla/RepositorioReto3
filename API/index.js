@@ -43,7 +43,7 @@ app.get('/', (req,res) => res.send('Web Service Reto 3'));
 
 app.listen(port,function()
 {
-    console.log("Runnin WS NetAlmix");
+    console.log("Runnin WS PlayAlmi");
 });
 
 
