@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>PlayAlmi | Zombie Ranking</title>
+	<link rel="preconnect" href="https://fonts.googleapis.com" />
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+	<link href="https://fonts.googleapis.com/css2?family=Creepster&family=Chakra+Petch:wght@400;500;700&display=swap" rel="stylesheet" />
+	<link rel="stylesheet" href="./css/styles.css" />
+</head>
+<body>
+	<div class="fog fog-a" aria-hidden="true"></div>
+	<div class="fog fog-b" aria-hidden="true"></div>
+
+	<main class="layout">
+		<section class="hero panel reveal">
+			<p class="eyebrow">Night Event - Zombie Siege</p>
+			<h1>Ranking de Supervivientes</h1>
+			<p class="subtitle">Clasificacion en vivo de jugadores desde la API de PlayAlmi.</p>
+			<p class="status" id="status-text">Conectando API...</p>
+		</section>
+
+		<section class="panel ranking reveal delay-1">
+			<div style="display:flex; justify-content:space-between; gap:0.8rem; align-items:center; flex-wrap:wrap;">
+				<h2 style="margin:0;">Top jugadores</h2>
+				<button id="btn-recargar" type="button">Recargar ranking</button>
+			</div>
+
+			<div id="estado">
+				<p>Cargando datos del bunker...</p>
+			</div>
+
+			<div id="contenido" style="display:none;">
+				<table>
+					<thead>
+						<tr>
+							<th>#</th>
+							<th>Usuario</th>
+							<th>Kills</th>
+							<th>Puntos</th>
+							<th>Fecha registro</th>
+						</tr>
+					</thead>
+					<tbody id="tabla-body"></tbody>
+				</table>
+			</div>
+		</section>
+	</main>
+
+	<footer class="panel" style="width:min(1100px,94vw); margin:0 auto 1.2rem; display:flex; justify-content:space-between; gap:1rem; flex-wrap:wrap;">
+		<span>Origen de datos: <code>/api/users</code></span>
+		<span>Total jugadores: <strong id="total-usuarios">0</strong></span>
+	</footer>
+
+	<script src="./js/cargarUsers.js"></script>
+</body>
+</html>
