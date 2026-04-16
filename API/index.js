@@ -2,6 +2,8 @@
 
 let express = require('express');
 
+let cors = require('cors');
+
 //IMPORTAR BODY PARSER
 
 let bodyParser = require('body-parser');
@@ -12,6 +14,10 @@ let mongoose = require('mongoose');
 
 //INICIALIZAR SERVIDOR
 let app = express();
+
+//CONFIGURAR CORS
+app.use(cors());
+
 app.use(express.json());
 
 app.use(bodyParser.urlencoded(
@@ -40,6 +46,7 @@ var port = process.env.PORT || 8080;
 //URL POR DEFECTO
 
 app.get('/', (req,res) => res.send('Web Service Reto 3'));
+
 
 app.listen(port,function()
 {
