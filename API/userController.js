@@ -118,18 +118,18 @@ exports.delete = async function(req, res) {
 };
 
 
-exports.viewByPuntos = async function(req, res) {
+exports.viewgenero = async function(req, res) {
     try {
-        const users = await User.find({ puntos: req.params.puntos });
+        const users = await User.find({ kills: req.params.genero });
         if (!users || users.length === 0) {
             return res.status(404).json({
                 status: "error",
-                message: "No users found with that puntos"
+                message: "No users found with that kills"
             });
         }
 
         res.json({
-            message: "User details by puntos",
+            message: "User details by kills",
             data: users
         });
     } catch (error) {
