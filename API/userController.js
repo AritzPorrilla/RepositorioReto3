@@ -1,5 +1,9 @@
 const User = require('./userModel');
 
+function escapeRegex(value) {
+    return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 exports.index = async function(req, res) {
     try {
         const users = await User.get();
@@ -19,8 +23,25 @@ exports.index = async function(req, res) {
 
 exports.new = async function(req, res) {
     try {
+        const username = String(req.body.username || '').trim();
+        if (!username) {
+            return res.status(400).json({
+                message: 'Username is required'
+            });
+        }
+
+        const existingUser = await User.findOne({
+            username: new RegExp(`^${escapeRegex(username)}$`, 'i')
+        });
+
+        if (existingUser) {
+            return res.status(409).json({
+                message: 'User already exists'
+            });
+        }
+
         const user = new User({
-            username: req.body.username,
+            username,
             password: req.body.password,
             fecha_lanzamiento: req.body.fecha_lanzamiento,
             kills: req.body.kills,

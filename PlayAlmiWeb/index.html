@@ -24,8 +24,28 @@
 		<section class="panel ranking reveal delay-1">
 			<div style="display:flex; justify-content:space-between; gap:0.8rem; align-items:center; flex-wrap:wrap;">
 				<h2 style="margin:0;">Top jugadores</h2>
-				<button id="btn-recargar" type="button">Recargar ranking</button>
+				<div style="display:flex; gap:0.55rem; align-items:center; flex-wrap:wrap;">
+					<button id="btn-logout" class="ghost" type="button">Cerrar sesion</button>
+					<button id="btn-ver-mas" class="ghost" type="button" style="display:none;">Ver mas</button>
+					<button id="btn-recargar" type="button">Recargar ranking</button>
+				</div>
 			</div>
+			<p id="sesion-activa" style="margin:0.45rem 0 0.25rem; color:#d7ffc4; font-size:0.92rem;">Sesion activa: -</p>
+			<div style="display:flex; gap:0.65rem; flex-wrap:wrap; margin:0.25rem 0 0.4rem; align-items:end;">
+				<div style="min-width:220px; flex:1 1 280px;">
+					<label for="busqueda-nombre" style="display:block; margin-bottom:0.3rem; color:#a7b8a1; font-size:0.9rem;">Buscar por nombre</label>
+					<input id="busqueda-nombre" type="text" placeholder="Ej: survivor" />
+				</div>
+				<div style="min-width:220px; flex:1 1 280px;">
+					<label for="orden-ranking" style="display:block; margin-bottom:0.3rem; color:#a7b8a1; font-size:0.9rem;">Ordenar ranking</label>
+					<select id="orden-ranking" style="width:100%; border:1px solid rgba(162, 255, 117, 0.25); border-radius:10px; background:rgba(19, 24, 18, 0.9); color:#edf7e8; padding:0.65rem 0.75rem; font:inherit;">
+						<option value="puntos">Por puntos (mayor a menor)</option>
+						<option value="kills">Por kills (mayor a menor)</option>
+						<option value="antiguedad">Por antiguedad (mas antigua primero)</option>
+					</select>
+				</div>
+			</div>
+			<p id="resumen-ranking" style="margin:0.45rem 0 0.25rem; color:#a7b8a1; font-size:0.92rem;">Mostrando Top 10 por puntos.</p>
 
 			<div id="estado">
 				<p>Cargando datos del bunker...</p>

@@ -8,6 +8,46 @@ const tablaBody = document.getElementById('tabla-body');
 const totalUsuarios = document.getElementById('total-usuarios');
 const statusText = document.getElementById('status-text');
 const btnRecargar = document.getElementById('btn-recargar');
+const btnVerMas = document.getElementById('btn-ver-mas');
+const btnLogout = document.getElementById('btn-logout');
+const resumenRanking = document.getElementById('resumen-ranking');
+const sesionActiva = document.getElementById('sesion-activa');
+const busquedaNombre = document.getElementById('busqueda-nombre');
+const ordenRanking = document.getElementById('orden-ranking');
+
+const PLAYALMI_SESSION_KEY = 'playalmi_active_user';
+
+const LIMITE_TOP = 10;
+
+let rankingActual = [];
+let mostrarTodos = false;
+let usuariosCargados = [];
+const usuarioActivo = getActiveUser();
+
+function getActiveUser() {
+    try {
+        const raw = localStorage.getItem(PLAYALMI_SESSION_KEY);
+        return raw ? JSON.parse(raw) : null;
+    } catch {
+        return null;
+    }
+}
+
+function clearActiveUser() {
+    localStorage.removeItem(PLAYALMI_SESSION_KEY);
+}
+
+function enviarARegistro() {
+    window.location.href = './registro.html';
+}
+
+if (!usuarioActivo?.username) {
+    enviarARegistro();
+}
+
+if (sesionActiva && usuarioActivo?.username) {
+    sesionActiva.textContent = `Sesion activa: ${usuarioActivo.username}`;
+}
 
 function escapeHtml(valor) {
     return String(valor ?? '')
@@ -30,8 +70,56 @@ function formatearFechaSoloYMD(fecha) {
     return date.toISOString().slice(0, 10);
 }
 
-function renderTabla(usuarios) {
-    const ranking = [...usuarios].sort((a, b) => {
+function getFechaTimestamp(usuario) {
+    const raw = String(usuario?.fecha_lanzamiento ?? '').trim();
+    if (!raw) return Number.POSITIVE_INFINITY;
+
+    const date = new Date(raw);
+    if (Number.isNaN(date.getTime())) return Number.POSITIVE_INFINITY;
+    return date.getTime();
+}
+
+function filtrarYOrdenarUsuarios(usuarios) {
+    const filtro = String(busquedaNombre?.value || '').trim().toLowerCase();
+    const criterio = String(ordenRanking?.value || 'puntos');
+
+    const filtrados = usuarios.filter((usuario) => {
+        if (!filtro) return true;
+        const username = String(usuario?.username || '').toLowerCase();
+        return username.includes(filtro);
+    });
+
+    return filtrados.sort((a, b) => {
+        if (criterio === 'kills') {
+            const killsA = Number(a?.kills ?? 0);
+            const killsB = Number(b?.kills ?? 0);
+            if (killsB !== killsA) return killsB - killsA;
+
+            const puntosA = Number(a?.puntos ?? 0);
+            const puntosB = Number(b?.puntos ?? 0);
+            return puntosB - puntosA;
+        }
+
+        if (criterio === 'antiguedad') {
+            const fechaA = getFechaTimestamp(a);
+            const fechaB = getFechaTimestamp(b);
+            if (fechaA !== fechaB) return fechaA - fechaB;
+
+            const puntosA = Number(a?.puntos ?? 0);
+            const puntosB = Number(b?.puntos ?? 0);
+            return puntosB - puntosA;
+        }
+
+        if (criterio === 'menos-antiguo') {
+            const fechaA = getFechaTimestamp(a);
+            const fechaB = getFechaTimestamp(b);
+            if (fechaA !== fechaB) return fechaB - fechaA;
+
+            const puntosA = Number(a?.puntos ?? 0);
+            const puntosB = Number(b?.puntos ?? 0);
+            return puntosB - puntosA;
+        }
+
         const puntosA = Number(a?.puntos ?? 0);
         const puntosB = Number(b?.puntos ?? 0);
         if (puntosB !== puntosA) return puntosB - puntosA;
@@ -40,14 +128,37 @@ function renderTabla(usuarios) {
         const killsB = Number(b?.kills ?? 0);
         return killsB - killsA;
     });
+}
 
-    if (!usuarios.length) {
-        tablaBody.innerHTML = '<tr><td colspan="5" class="empty">No hay usuarios para mostrar.</td></tr>';
+function renderTabla(usuarios) {
+    const ranking = filtrarYOrdenarUsuarios([...usuarios]);
+    const criterio = String(ordenRanking?.value || 'puntos');
+    const filtro = String(busquedaNombre?.value || '').trim();
+    const etiquetaOrden = criterio === 'kills'
+        ? 'kills'
+        : criterio === 'menos-antiguo'
+            ? 'menos antiguedad'
+        : criterio === 'antiguedad'
+            ? 'antiguedad'
+            : 'puntos';
+
+    rankingActual = ranking;
+
+    if (!ranking.length) {
+        tablaBody.innerHTML = '<tr><td colspan="5" class="empty">No hay jugadores que coincidan con la busqueda.</td></tr>';
+        if (btnVerMas) btnVerMas.style.display = 'none';
+        if (resumenRanking) {
+            resumenRanking.textContent = filtro
+                ? `No hay resultados para "${filtro}".`
+                : 'No hay jugadores registrados aun.';
+        }
         return;
     }
 
-    tablaBody.innerHTML = ranking
+    const rankingVisible = mostrarTodos ? ranking : ranking.slice(0, LIMITE_TOP);
+    tablaBody.innerHTML = rankingVisible
         .map((usuario, index) => {
+            const posicion = mostrarTodos ? index + 1 : index + 1;
             const username = escapeHtml(usuario.username || 'Sin nombre');
             const kills = escapeHtml(usuario.kills ?? 0);
             const puntos = escapeHtml(usuario.puntos ?? 0);
@@ -55,7 +166,7 @@ function renderTabla(usuarios) {
 
             return `
                 <tr>
-                    <td>${index + 1}</td>
+                    <td>${posicion}</td>
                     <td>${username}</td>
                     <td>${kills}</td>
                     <td>${puntos}</td>
@@ -64,6 +175,22 @@ function renderTabla(usuarios) {
             `;
         })
         .join('');
+
+    if (resumenRanking) {
+        resumenRanking.textContent = mostrarTodos
+            ? `Mostrando ${ranking.length} jugadores ordenados por ${etiquetaOrden}.`
+            : `Mostrando Top ${Math.min(LIMITE_TOP, ranking.length)} por ${etiquetaOrden}.`;
+    }
+
+    if (!btnVerMas) return;
+
+    if (ranking.length > LIMITE_TOP) {
+        const restantes = ranking.length - LIMITE_TOP;
+        btnVerMas.style.display = 'inline-block';
+        btnVerMas.textContent = mostrarTodos ? 'Ver menos' : `Ver mas (${restantes})`;
+    } else {
+        btnVerMas.style.display = 'none';
+    }
 }
 
 async function cargarUsuarios() {
@@ -97,7 +224,9 @@ async function cargarUsuarios() {
 
         const payload = await response.json();
         const usuarios = Array.isArray(payload?.data) ? payload.data : [];
+        usuariosCargados = usuarios;
 
+        mostrarTodos = false;
         renderTabla(usuarios);
         totalUsuarios.textContent = String(usuarios.length);
         statusText.textContent = `API conectada (${apiActiva})`;
@@ -115,4 +244,36 @@ cargarUsuarios();
 
 if (btnRecargar) {
     btnRecargar.addEventListener('click', cargarUsuarios);
+}
+
+if (btnVerMas) {
+    btnVerMas.addEventListener('click', () => {
+        if (!rankingActual.length || rankingActual.length <= LIMITE_TOP) {
+            return;
+        }
+
+        mostrarTodos = !mostrarTodos;
+        renderTabla(usuariosCargados);
+    });
+}
+
+if (busquedaNombre) {
+    busquedaNombre.addEventListener('input', () => {
+        mostrarTodos = false;
+        renderTabla(usuariosCargados);
+    });
+}
+
+if (ordenRanking) {
+    ordenRanking.addEventListener('change', () => {
+        mostrarTodos = false;
+        renderTabla(usuariosCargados);
+    });
+}
+
+if (btnLogout) {
+    btnLogout.addEventListener('click', () => {
+        clearActiveUser();
+        enviarARegistro();
+    });
 }
