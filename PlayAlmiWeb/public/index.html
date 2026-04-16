@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PlayAlmi | Mensajes</title>
+  <title>PlayAlmi | Usuarios</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet" />
@@ -15,32 +15,19 @@
 
   <main class="layout">
     <section class="panel intro reveal">
-      <p class="eyebrow">MongoDB + Node.js</p>
-      <h1>Tablero de mensajes PlayAlmi</h1>
-      <p class="subtitle">Escribe un mensaje y guárdalo en la base de datos. La lista se actualiza desde la API en vivo.</p>
+      <p class="eyebrow">Web en 5500 + API en 8080</p>
+      <h1>Usuarios PlayAlmi</h1>
+      <p class="subtitle">La web consulta únicamente la ruta <strong>/api/users</strong> del backend.</p>
       <div class="status" id="statusApi">Conectando API...</div>
-    </section>
-
-    <section class="panel reveal delay-1">
-      <h2>Nuevo mensaje</h2>
-      <form id="formMensaje" class="form">
-        <label for="nombre">Nombre</label>
-        <input id="nombre" name="nombre" type="text" placeholder="Tu nombre" required />
-
-        <label for="contenido">Mensaje</label>
-        <textarea id="contenido" name="contenido" rows="4" placeholder="Escribe algo para guardar en MongoDB" required></textarea>
-
-        <button type="submit">Guardar mensaje</button>
-      </form>
-      <p class="feedback" id="feedback"></p>
     </section>
 
     <section class="panel reveal delay-2">
       <div class="header-lista">
-        <h2>Mensajes guardados</h2>
+        <h2>Usuarios guardados</h2>
         <button id="btnRecargar" class="ghost">Recargar</button>
       </div>
-      <ul id="listaMensajes" class="lista"></ul>
+      <p class="feedback" id="feedback"></p>
+      <ul id="listaUsuarios" class="lista"></ul>
     </section>
   </main>
 

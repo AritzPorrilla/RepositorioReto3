@@ -1,8 +1,9 @@
 const statusApi = document.getElementById('statusApi');
 const feedback = document.getElementById('feedback');
-const formMensaje = document.getElementById('formMensaje');
-const listaMensajes = document.getElementById('listaMensajes');
+const listaUsuarios = document.getElementById('listaUsuarios');
 const btnRecargar = document.getElementById('btnRecargar');
+
+const API_BASE_URL = 'http://192.168.0.84:8080/api';
 
 function mostrarFeedback(texto, tipo = '') {
   feedback.textContent = texto;
@@ -14,45 +15,50 @@ function formatearFecha(fechaIso) {
   return new Date(fechaIso).toLocaleString('es-ES');
 }
 
-function renderizarMensajes(mensajes) {
-  if (!mensajes.length) {
-    listaMensajes.innerHTML = '<li>No hay mensajes todavía.</li>';
+function renderizarUsuarios(usuarios) {
+  if (!usuarios.length) {
+    listaUsuarios.innerHTML = '<li>No hay usuarios todavía.</li>';
     return;
   }
 
-  listaMensajes.innerHTML = mensajes
-    .map((mensaje) => {
-      const nombreSeguro = String(mensaje.nombre ?? '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-      const contenidoSeguro = String(mensaje.contenido ?? '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  listaUsuarios.innerHTML = usuarios
+    .map((usuario) => {
+      const usernameSeguro = String(usuario.username ?? '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      const puntosSeguro = String(usuario.puntos ?? '0');
+      const killsSeguro = String(usuario.kills ?? 'Sin kills').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      const fechaSeguro = formatearFecha(usuario.fecha_lanzamiento);
 
       return `
         <li>
-          <strong>${nombreSeguro}</strong>
-          <p>${contenidoSeguro}</p>
-          <p class="meta">${formatearFecha(mensaje.createdAt)}</p>
+          <strong>${usernameSeguro}</strong>
+          <p>Puntos: ${puntosSeguro}</p>
+          <p>Kills: ${killsSeguro}</p>
+          <p class="meta">Fecha: ${fechaSeguro}</p>
         </li>
       `;
     })
     .join('');
 }
 
-async function cargarMensajes() {
+async function cargarUsuarios() {
   try {
-    const respuesta = await fetch('/api/mensajes');
-    if (!respuesta.ok) throw new Error('No fue posible cargar los mensajes');
+    const respuesta = await fetch(`${API_BASE_URL}/users`);
+    if (!respuesta.ok) throw new Error('No fue posible cargar los usuarios');
 
-    const mensajes = await respuesta.json();
-    renderizarMensajes(mensajes);
+    const datos = await respuesta.json();
+    const usuarios = Array.isArray(datos?.data) ? datos.data : [];
+    renderizarUsuarios(usuarios);
     statusApi.textContent = 'API conectada';
+    mostrarFeedback('Usuarios cargados desde la API.', 'ok');
   } catch (error) {
     statusApi.textContent = 'API sin conexión';
-    mostrarFeedback('Error al cargar mensajes desde la API.', 'error');
+    mostrarFeedback('Error al cargar usuarios desde la API.', 'error');
   }
 }
 
 async function verificarApi() {
   try {
-    const respuesta = await fetch('/api/health');
+    const respuesta = await fetch(`${API_BASE_URL}/users`);
     if (!respuesta.ok) throw new Error();
     statusApi.textContent = 'API conectada';
   } catch {
@@ -60,39 +66,7 @@ async function verificarApi() {
   }
 }
 
-formMensaje.addEventListener('submit', async (event) => {
-  event.preventDefault();
-  mostrarFeedback('Guardando mensaje...');
-
-  const formData = new FormData(formMensaje);
-  const payload = {
-    nombre: String(formData.get('nombre') || '').trim(),
-    contenido: String(formData.get('contenido') || '').trim()
-  };
-
-  if (!payload.nombre || !payload.contenido) {
-    mostrarFeedback('Completa nombre y mensaje.', 'error');
-    return;
-  }
-
-  try {
-    const respuesta = await fetch('/api/mensajes', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-
-    if (!respuesta.ok) throw new Error('Error al guardar');
-
-    formMensaje.reset();
-    mostrarFeedback('Mensaje guardado en MongoDB.', 'ok');
-    await cargarMensajes();
-  } catch (error) {
-    mostrarFeedback('No se pudo guardar el mensaje.', 'error');
-  }
-});
-
-btnRecargar.addEventListener('click', cargarMensajes);
+btnRecargar.addEventListener('click', cargarUsuarios);
 
 verificarApi();
-cargarMensajes();
+cargarUsuarios();
