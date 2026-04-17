@@ -141,6 +141,44 @@ function actualizarUIPerfil(usuario) {
   }
 }
 
+function obtenerFotoLocalGuardada(username) {
+  return localStorage.getItem(getPhotoStorageKey(username));
+}
+
+async function sincronizarFotoLocalSiFalta(usuario) {
+  const username = String(usuario?.username || usuarioActivo?.username || '').trim();
+  if (!username) {
+    return null;
+  }
+
+  const fotoEnServidor = String(usuario?.foto_perfil || '').trim();
+  const fotoLocal = obtenerFotoLocalGuardada(username);
+
+  if (fotoEnServidor || !fotoLocal) {
+    return null;
+  }
+
+  const usuarioActualizado = await actualizarPerfilRemoto({ foto_perfil: fotoLocal });
+  prepararSesionDesdeUsuario({
+    _id: usuarioActualizado.userId,
+    username,
+    puntos: usuarioActualizado.usuarioActualizado?.puntos ?? usuarioActivo?.puntos ?? 0,
+    kills: usuarioActualizado.usuarioActualizado?.kills ?? usuarioActivo?.kills ?? 0,
+    fecha_lanzamiento: usuarioActualizado.usuarioActualizado?.fecha_lanzamiento || usuarioActivo?.fecha_lanzamiento || '',
+    foto_perfil: fotoLocal
+  });
+
+  actualizarUIPerfil({
+    username,
+    foto_perfil: fotoLocal,
+    puntos: usuarioActualizado.usuarioActualizado?.puntos ?? usuarioActivo?.puntos ?? 0,
+    kills: usuarioActualizado.usuarioActualizado?.kills ?? usuarioActivo?.kills ?? 0,
+    fecha_lanzamiento: usuarioActualizado.usuarioActualizado?.fecha_lanzamiento || usuarioActivo?.fecha_lanzamiento || ''
+  });
+
+  return fotoLocal;
+}
+
 async function fetchConFallback(urls, options) {
   let ultimoError = null;
 
@@ -423,7 +461,9 @@ async function cargarPerfil() {
 
     prepararSesionDesdeUsuario(usuarioLista);
     actualizarUIPerfil(usuarioLista);
-    setPerfilEstado('Perfil cargado correctamente.');
+
+    const fotoSincronizada = await sincronizarFotoLocalSiFalta(usuarioLista);
+    setPerfilEstado(fotoSincronizada ? 'Foto sincronizada y perfil cargado correctamente.' : 'Perfil cargado correctamente.');
   } catch (error) {
     setPerfilEstado(`Error al cargar perfil: ${error.message}`, 'error');
   }
