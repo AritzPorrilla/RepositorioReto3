@@ -5,6 +5,7 @@ const User = require('./userModel');
 
 const PROFILE_IMAGE_DIR = path.join(__dirname, '..', 'PlayAlmiWeb', 'img', 'perfiles');
 const PROFILE_IMAGE_ROUTE = '/img/perfiles';
+const PUBLIC_IMAGE_BASE_URL = (process.env.PLAYALMI_PUBLIC_BASE_URL || 'http://192.168.0.84:8080').replace(/\/$/, '');
 
 function escapeRegex(value) {
     return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -23,6 +24,18 @@ function getImageExtension(mimeType) {
     return 'jpg';
 }
 
+function toPublicImageUrl(value) {
+    const texto = String(value || '').trim();
+    if (!texto) return '';
+
+    if (/^https?:\/\//i.test(texto)) {
+        return texto;
+    }
+
+    const normalizedPath = texto.startsWith('/') ? texto : `/${texto}`;
+    return `${PUBLIC_IMAGE_BASE_URL}${normalizedPath}`;
+}
+
 async function persistProfileImage(photoValue, username) {
     const value = String(photoValue || '').trim();
     if (!value) {
@@ -34,7 +47,7 @@ async function persistProfileImage(photoValue, username) {
     }
 
     if (value.startsWith('/img/') || value.startsWith('img/')) {
-        return value.startsWith('/') ? value : `/${value}`;
+        return toPublicImageUrl(value);
     }
 
     if (!isDataImage(value)) {
@@ -59,7 +72,7 @@ async function persistProfileImage(photoValue, username) {
     await fs.mkdir(PROFILE_IMAGE_DIR, { recursive: true });
     await fs.writeFile(path.join(PROFILE_IMAGE_DIR, fileName), buffer);
 
-    return `${PROFILE_IMAGE_ROUTE}/${fileName}`;
+    return toPublicImageUrl(`${PROFILE_IMAGE_ROUTE}/${fileName}`);
 }
 
 function normalizePhotoKey(username) {
@@ -81,7 +94,7 @@ async function resolvePhotoFromDisk(username) {
             return '';
         }
 
-        return `${PROFILE_IMAGE_ROUTE}/${fileName}`;
+        return toPublicImageUrl(`${PROFILE_IMAGE_ROUTE}/${fileName}`);
     } catch {
         return '';
     }
