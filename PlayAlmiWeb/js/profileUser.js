@@ -7,6 +7,8 @@ const API_GET_CANDIDATAS = [
 
 const PLAYALMI_SESSION_KEY = 'playalmi_active_user';
 const PLAYALMI_PHOTO_KEY_PREFIX = 'playalmi_profile_photo';
+const DEFAULT_API_BASE_URL = 'http://192.168.0.84:8080';
+let apiBaseUrl = DEFAULT_API_BASE_URL;
 
 const perfilEstado = document.getElementById('perfil-estado');
 const sesionActiva = document.getElementById('sesion-activa');
@@ -24,6 +26,7 @@ const btnGuardarPerfil = document.getElementById('btn-guardar-perfil');
 
 let usuariosCargados = [];
 let usuarioActivo = getActiveUser();
+let fotoPerfilPreferida = '';
 
 function getActiveUser() {
   try {
@@ -57,6 +60,78 @@ function getPhotoPlaceholderUrl(username) {
   return `https://placehold.co/180x180/1b2819/d7ffc4?text=${encodeURIComponent(texto)}`;
 }
 
+function setApiBaseUrlFromUrl(url) {
+  const texto = String(url || '');
+  const indice = texto.indexOf('/api/users');
+  apiBaseUrl = indice >= 0 ? texto.slice(0, indice) : DEFAULT_API_BASE_URL;
+}
+
+function resolvePhotoSrc(value, username) {
+  const texto = String(value || '').trim();
+  if (!texto) {
+    return getPhotoPlaceholderUrl(username);
+  }
+
+  if (/^(data:|https?:\/\/)/i.test(texto)) {
+    return texto;
+  }
+
+  if (texto.startsWith('/img/')) {
+    return `${apiBaseUrl}${texto}`;
+  }
+
+  if (texto.startsWith('img/')) {
+    return `${apiBaseUrl}/${texto}`;
+  }
+
+  return texto;
+}
+
+function obtenerFotoLocalGuardada(username) {
+  return localStorage.getItem(getPhotoStorageKey(username));
+}
+
+async function sincronizarFotoServidorSiHaceFalta(usuario) {
+  const username = String(usuario?.username || usuarioActivo?.username || '').trim();
+  if (!username) {
+    return null;
+  }
+
+  const fotoServidor = String(usuario?.foto_perfil || usuarioActivo?.foto_perfil || '').trim();
+  const fotoLocal = obtenerFotoLocalGuardada(username);
+  const fotoFuente = fotoServidor.startsWith('data:image/')
+    ? fotoServidor
+    : (!fotoServidor && fotoLocal ? fotoLocal : '');
+
+  if (!fotoFuente) {
+    return null;
+  }
+
+  const { usuarioActualizado } = await actualizarPerfilRemoto({ foto_perfil: fotoFuente });
+  const fotoFinal = String(usuarioActualizado.foto_perfil || fotoFuente).trim();
+  fotoPerfilPreferida = fotoFinal;
+
+  prepararSesionDesdeUsuario({
+    _id: usuarioActualizado._id || usuario?._id || usuarioActivo?.id || '',
+    username: usuarioActualizado.username || username,
+    kills: usuarioActualizado.kills ?? usuario?.kills ?? usuarioActivo?.kills ?? 0,
+    puntos: usuarioActualizado.puntos ?? usuario?.puntos ?? usuarioActivo?.puntos ?? 0,
+    fecha_lanzamiento: usuarioActualizado.fecha_lanzamiento || usuario?.fecha_lanzamiento || usuarioActivo?.fecha_lanzamiento || '',
+    foto_perfil: fotoFinal
+  });
+
+  actualizarUIPerfil({
+    _id: usuarioActualizado._id || usuario?._id || usuarioActivo?.id || '',
+    username: usuarioActualizado.username || username,
+    kills: usuarioActualizado.kills ?? usuario?.kills ?? usuarioActivo?.kills ?? 0,
+    puntos: usuarioActualizado.puntos ?? usuario?.puntos ?? usuarioActivo?.puntos ?? 0,
+    fecha_lanzamiento: usuarioActualizado.fecha_lanzamiento || usuario?.fecha_lanzamiento || usuarioActivo?.fecha_lanzamiento || '',
+    foto_perfil: fotoFinal
+  });
+
+  return fotoFinal;
+}
+
 function formatearFechaSoloYMD(fecha) {
   const texto = String(fecha ?? '').trim();
   if (!texto) return 'Sin fecha';
@@ -88,7 +163,6 @@ function getUsuarioActivoDesdeLista(usuarios) {
   if (!usernameSesion) {
     return null;
   }
-
   return usuarios.find((usuario) => String(usuario?.username || '').trim().toLowerCase() === usernameSesion) || null;
 }
 
@@ -96,6 +170,7 @@ function prepararSesionDesdeUsuario(usuario) {
   if (!usuario) return;
 
   setActiveUser({
+    id: usuario._id || usuarioActivo?.id || '',
     username: usuario.username || usuarioActivo?.username || '',
     puntos: usuario.puntos ?? usuarioActivo?.puntos ?? 0,
     kills: usuario.kills ?? usuarioActivo?.kills ?? 0,
@@ -110,6 +185,8 @@ function actualizarUIPerfil(usuario) {
   const puntos = usuario?.puntos ?? usuarioActivo?.puntos ?? 0;
   const fecha = usuario?.fecha_lanzamiento ?? usuarioActivo?.fecha_lanzamiento;
   const fotoDb = String(usuario?.foto_perfil || usuarioActivo?.foto_perfil || '');
+  const fotoGuardada = localStorage.getItem(getPhotoStorageKey(username));
+  const fotoMostrada = fotoPerfilPreferida || fotoDb || fotoGuardada;
 
   if (perfilUsernameInput) {
     perfilUsernameInput.value = username;
@@ -127,9 +204,8 @@ function actualizarUIPerfil(usuario) {
     perfilFecha.textContent = formatearFechaSoloYMD(fecha);
   }
 
-  const fotoGuardada = localStorage.getItem(getPhotoStorageKey(username));
   if (perfilFoto) {
-    perfilFoto.src = fotoDb || fotoGuardada || getPhotoPlaceholderUrl(username);
+    perfilFoto.src = resolvePhotoSrc(fotoMostrada, username);
   }
 
   if (fotoDb) {
@@ -139,44 +215,6 @@ function actualizarUIPerfil(usuario) {
   if (sesionActiva) {
     sesionActiva.textContent = `Sesion activa: ${username || '-'}`;
   }
-}
-
-function obtenerFotoLocalGuardada(username) {
-  return localStorage.getItem(getPhotoStorageKey(username));
-}
-
-async function sincronizarFotoLocalSiFalta(usuario) {
-  const username = String(usuario?.username || usuarioActivo?.username || '').trim();
-  if (!username) {
-    return null;
-  }
-
-  const fotoEnServidor = String(usuario?.foto_perfil || '').trim();
-  const fotoLocal = obtenerFotoLocalGuardada(username);
-
-  if (fotoEnServidor || !fotoLocal) {
-    return null;
-  }
-
-  const usuarioActualizado = await actualizarPerfilRemoto({ foto_perfil: fotoLocal });
-  prepararSesionDesdeUsuario({
-    _id: usuarioActualizado.userId,
-    username,
-    puntos: usuarioActualizado.usuarioActualizado?.puntos ?? usuarioActivo?.puntos ?? 0,
-    kills: usuarioActualizado.usuarioActualizado?.kills ?? usuarioActivo?.kills ?? 0,
-    fecha_lanzamiento: usuarioActualizado.usuarioActualizado?.fecha_lanzamiento || usuarioActivo?.fecha_lanzamiento || '',
-    foto_perfil: fotoLocal
-  });
-
-  actualizarUIPerfil({
-    username,
-    foto_perfil: fotoLocal,
-    puntos: usuarioActualizado.usuarioActualizado?.puntos ?? usuarioActivo?.puntos ?? 0,
-    kills: usuarioActualizado.usuarioActualizado?.kills ?? usuarioActivo?.kills ?? 0,
-    fecha_lanzamiento: usuarioActualizado.usuarioActualizado?.fecha_lanzamiento || usuarioActivo?.fecha_lanzamiento || ''
-  });
-
-  return fotoLocal;
 }
 
 async function fetchConFallback(urls, options) {
@@ -189,6 +227,7 @@ async function fetchConFallback(urls, options) {
         throw new Error(`Error HTTP ${response.status}`);
       }
 
+      setApiBaseUrlFromUrl(url);
       const payload = await response.json();
       return { payload, url };
     } catch (error) {
@@ -203,6 +242,7 @@ function getUpdateUrls(userId) {
   return [
     './proxy-update-user.php',
     `http://localhost:8080/api/users/${encodeURIComponent(userId)}`,
+    `http://127.0.0.1:8080/api/users/${encodeURIComponent(userId)}`,
     `http://192.168.0.84:8080/api/users/${encodeURIComponent(userId)}`
   ];
 }
@@ -298,6 +338,8 @@ async function actualizarPerfilRemoto(payloadBase) {
     throw ultimoError || new Error('No se pudo actualizar el perfil');
   }
 
+  setApiBaseUrlFromUrl(resultado.url);
+
   const usuarioActualizado = resultado.data?.data || {};
   prepararSesionDesdeUsuario({
     _id: usuarioActualizado._id || userId,
@@ -355,8 +397,19 @@ function initFotoPerfil() {
 
       const { usuarioActualizado } = await actualizarPerfilRemoto({ foto_perfil: resultado });
       const username = usuarioActualizado.username || usuarioActivo?.username;
-      localStorage.setItem(getPhotoStorageKey(username), usuarioActualizado.foto_perfil || resultado);
-      actualizarUIPerfil(usuarioActualizado);
+      const fotoFinal = String(usuarioActualizado.foto_perfil || resultado).trim();
+      fotoPerfilPreferida = fotoFinal;
+      localStorage.setItem(getPhotoStorageKey(username), fotoFinal);
+      setActiveUser({
+        ...(usuarioActivo || {}),
+        username: username || usuarioActivo?.username || '',
+        foto_perfil: fotoFinal
+      });
+      actualizarUIPerfil({
+        ...usuarioActualizado,
+        username: username || usuarioActivo?.username || '',
+        foto_perfil: fotoFinal
+      });
       perfilFotoMsg.textContent = 'Foto guardada en MongoDB correctamente.';
       perfilFotoMsg.style.color = '#bbf7b5';
     } catch (error) {
@@ -460,10 +513,12 @@ async function cargarPerfil() {
     }
 
     prepararSesionDesdeUsuario(usuarioLista);
-    actualizarUIPerfil(usuarioLista);
-
-    const fotoSincronizada = await sincronizarFotoLocalSiFalta(usuarioLista);
-    setPerfilEstado(fotoSincronizada ? 'Foto sincronizada y perfil cargado correctamente.' : 'Perfil cargado correctamente.');
+    actualizarUIPerfil({
+      ...usuarioLista,
+      foto_perfil: fotoPerfilPreferida || usuarioLista?.foto_perfil || ''
+    });
+    const fotoSincronizada = await sincronizarFotoServidorSiHaceFalta(usuarioLista);
+    setPerfilEstado(fotoSincronizada ? 'Foto compartida sincronizada correctamente.' : 'Perfil cargado correctamente.');
   } catch (error) {
     setPerfilEstado(`Error al cargar perfil: ${error.message}`, 'error');
   }

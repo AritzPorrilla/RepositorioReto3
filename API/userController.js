@@ -1,7 +1,65 @@
+const path = require('path');
+const fs = require('fs/promises');
+const crypto = require('crypto');
 const User = require('./userModel');
+
+const PROFILE_IMAGE_DIR = path.join(__dirname, '..', 'PlayAlmiWeb', 'img', 'perfiles');
+const PROFILE_IMAGE_ROUTE = '/img/perfiles';
 
 function escapeRegex(value) {
     return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function isDataImage(value) {
+    return /^data:image\/[a-zA-Z0-9.+-]+;base64,/.test(String(value || ''));
+}
+
+function getImageExtension(mimeType) {
+    const normalizado = String(mimeType || '').toLowerCase();
+
+    if (normalizado === 'image/png') return 'png';
+    if (normalizado === 'image/webp') return 'webp';
+    if (normalizado === 'image/gif') return 'gif';
+    return 'jpg';
+}
+
+async function persistProfileImage(photoValue, username) {
+    const value = String(photoValue || '').trim();
+    if (!value) {
+        return '';
+    }
+
+    if (/^https?:\/\//i.test(value)) {
+        return value;
+    }
+
+    if (value.startsWith('/img/') || value.startsWith('img/')) {
+        return value.startsWith('/') ? value : `/${value}`;
+    }
+
+    if (!isDataImage(value)) {
+        return value;
+    }
+
+    const match = value.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,(.+)$/);
+    if (!match) {
+        return value;
+    }
+
+    const mimeType = match[1];
+    const base64Data = match[2];
+    const buffer = Buffer.from(base64Data, 'base64');
+    const safeUsername = String(username || 'perfil')
+        .toLowerCase()
+        .replace(/[^a-z0-9_-]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+        .slice(0, 24) || 'perfil';
+    const fileName = `${safeUsername}-${crypto.randomUUID()}.${getImageExtension(mimeType)}`;
+
+    await fs.mkdir(PROFILE_IMAGE_DIR, { recursive: true });
+    await fs.writeFile(path.join(PROFILE_IMAGE_DIR, fileName), buffer);
+
+    return `${PROFILE_IMAGE_ROUTE}/${fileName}`;
 }
 
 exports.index = async function(req, res) {
@@ -45,7 +103,7 @@ exports.new = async function(req, res) {
             fecha_lanzamiento: req.body.fecha_lanzamiento,
             kills: req.body.kills,
             puntos: req.body.puntos,
-            foto_perfil: req.body.foto_perfil || ''
+            foto_perfil: await persistProfileImage(req.body.foto_perfil, username)
         });
 
         const savedUser = await user.save();
@@ -117,7 +175,7 @@ exports.update = async function(req, res) {
         }
 
         if (Object.prototype.hasOwnProperty.call(req.body, 'foto_perfil')) {
-            user.foto_perfil = req.body.foto_perfil || '';
+            user.foto_perfil = await persistProfileImage(req.body.foto_perfil, user.username);
         }
 
         const updatedUser = await user.save();

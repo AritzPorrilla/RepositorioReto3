@@ -29,6 +29,8 @@ const navPerfilFoto = document.getElementById('nav-perfil-foto');
 
 const PLAYALMI_SESSION_KEY = 'playalmi_active_user';
 const PLAYALMI_PHOTO_KEY_PREFIX = 'playalmi_profile_photo';
+const DEFAULT_API_BASE_URL = 'http://192.168.0.84:8080';
+let apiBaseUrl = DEFAULT_API_BASE_URL;
 
 const LIMITE_TOP = 10;
 
@@ -63,6 +65,33 @@ function getPhotoStorageKey(username) {
 function getPhotoPlaceholderUrl(username) {
     const texto = String(username || 'Perfil').trim() || 'Perfil';
     return `https://placehold.co/180x180/1b2819/d7ffc4?text=${encodeURIComponent(texto)}`;
+}
+
+function setApiBaseUrlFromUrl(url) {
+    const texto = String(url || '');
+    const indice = texto.indexOf('/api/users');
+    apiBaseUrl = indice >= 0 ? texto.slice(0, indice) : DEFAULT_API_BASE_URL;
+}
+
+function resolvePhotoSrc(value, username) {
+    const texto = String(value || '').trim();
+    if (!texto) {
+        return getPhotoPlaceholderUrl(username);
+    }
+
+    if (/^(data:|https?:\/\/)/i.test(texto)) {
+        return texto;
+    }
+
+    if (texto.startsWith('/img/')) {
+        return `${apiBaseUrl}${texto}`;
+    }
+
+    if (texto.startsWith('img/')) {
+        return `${apiBaseUrl}/${texto}`;
+    }
+
+    return texto;
 }
 
 function enviarARegistro() {
@@ -155,11 +184,11 @@ function actualizarUIPerfil(usuario) {
 
     const fotoGuardada = localStorage.getItem(getPhotoStorageKey(username));
     if (perfilFoto) {
-        perfilFoto.src = fotoDb || fotoGuardada || getPhotoPlaceholderUrl(username);
+          perfilFoto.src = resolvePhotoSrc(fotoDb || fotoGuardada, username);
     }
 
     if (navPerfilFoto) {
-        navPerfilFoto.src = fotoDb || fotoGuardada || getPhotoPlaceholderUrl(username);
+          navPerfilFoto.src = resolvePhotoSrc(fotoDb || fotoGuardada, username);
     }
 
     if (sesionActiva) {
@@ -304,6 +333,7 @@ async function fetchConFallback(urls, options) {
                 throw new Error(`Error HTTP ${response.status}`);
             }
 
+            setApiBaseUrlFromUrl(url);
             const payload = await response.json();
             return { payload, url };
         } catch (error) {
