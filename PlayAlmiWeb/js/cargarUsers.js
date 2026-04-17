@@ -94,6 +94,14 @@ function resolvePhotoSrc(value, username) {
     return texto;
 }
 
+function getLocalPhotoForUsername(username) {
+    try {
+        return localStorage.getItem(getPhotoStorageKey(username)) || '';
+    } catch {
+        return '';
+    }
+}
+
 function enviarARegistro() {
     window.location.href = './registro.html';
 }
@@ -275,7 +283,7 @@ function renderTabla(usuarios) {
     rankingActual = ranking;
 
     if (!ranking.length) {
-        tablaBody.innerHTML = '<tr><td colspan="5" class="empty">No hay jugadores que coincidan con la busqueda.</td></tr>';
+        tablaBody.innerHTML = '<tr><td colspan="6" class="empty">No hay jugadores que coincidan con la busqueda.</td></tr>';
         if (btnVerMas) btnVerMas.style.display = 'none';
         if (resumenRanking) {
             resumenRanking.textContent = filtro
@@ -293,10 +301,14 @@ function renderTabla(usuarios) {
             const kills = escapeHtml(usuario.kills ?? 0);
             const puntos = escapeHtml(usuario.puntos ?? 0);
             const fecha = escapeHtml(formatearFechaSoloYMD(usuario.fecha_lanzamiento));
+            const fotoLocal = getLocalPhotoForUsername(usuario.username || '');
+            const fotoPerfil = escapeHtml(resolvePhotoSrc(usuario.foto_perfil || fotoLocal || '', usuario.username || 'Perfil'));
+            const nombreFoto = escapeHtml(usuario.username || 'Perfil');
 
             return `
                 <tr>
                     <td>${posicion}</td>
+                    <td><img class="ranking-avatar" src="${fotoPerfil}" alt="Foto de ${nombreFoto}" loading="lazy" /></td>
                     <td>${username}</td>
                     <td>${kills}</td>
                     <td>${puntos}</td>

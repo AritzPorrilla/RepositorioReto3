@@ -62,13 +62,54 @@ async function persistProfileImage(photoValue, username) {
     return `${PROFILE_IMAGE_ROUTE}/${fileName}`;
 }
 
+function normalizePhotoKey(username) {
+    return String(username || 'perfil')
+        .toLowerCase()
+        .replace(/[^a-z0-9_-]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+        .slice(0, 24) || 'perfil';
+}
+
+async function resolvePhotoFromDisk(username) {
+    const safeUsername = normalizePhotoKey(username);
+
+    try {
+        const files = await fs.readdir(PROFILE_IMAGE_DIR);
+        const fileName = files.find((name) => name.startsWith(`${safeUsername}-`));
+
+        if (!fileName) {
+            return '';
+        }
+
+        return `${PROFILE_IMAGE_ROUTE}/${fileName}`;
+    } catch {
+        return '';
+    }
+}
+
 exports.index = async function(req, res) {
     try {
         const users = await User.get();
+        const usersWithPhotos = await Promise.all(users.map(async (user) => {
+            if (user.foto_perfil) {
+                return user;
+            }
+
+            const foto_perfil = await resolvePhotoFromDisk(user.username);
+            if (!foto_perfil) {
+                return user;
+            }
+
+            return {
+                ...user.toObject(),
+                foto_perfil
+            };
+        }));
+
         res.json({
             status: 'success',
             message: 'Users retrieved successfully',
-            data: users
+            data: usersWithPhotos
         });
     } catch (err) {
         res.json({
