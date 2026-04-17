@@ -134,11 +134,15 @@ formRegistro.addEventListener('submit', async (event) => {
     statusRegistro.textContent = `Registrado en API (${resultado.url})`;
     mostrarFeedback('Jugador creado correctamente. Entrando al ranking...', 'ok');
 
+    const creado = resultado?.data?.data || {};
+
     setActiveUser({
-      username,
-      puntos: payload.puntos,
-      kills: payload.kills,
-      fecha_lanzamiento: payload.fecha_lanzamiento
+      id: creado._id || '',
+      username: creado.username || username,
+      puntos: creado.puntos ?? payload.puntos,
+      kills: creado.kills ?? payload.kills,
+      fecha_lanzamiento: creado.fecha_lanzamiento || payload.fecha_lanzamiento,
+      foto_perfil: creado.foto_perfil || ''
     });
 
     formRegistro.reset();
@@ -164,16 +168,18 @@ if (formLogin) {
     statusRegistro.textContent = 'Verificando usuario...';
     feedback.style.display = 'none';
 
+    const MENSAJE_LOGIN_INVALIDO = 'Usuario o contraseña incorrectos';
+
     try {
       const usuarios = await cargarUsuariosExistentes();
       const usuario = usuarios.find((item) => String(item?.username || '').trim().toLowerCase() === username.toLowerCase());
 
       if (!usuario) {
-        throw new Error('Usuario no encontrado');
+        throw new Error(MENSAJE_LOGIN_INVALIDO);
       }
 
       if (String(usuario.password || '') !== password) {
-        throw new Error('Password incorrecta');
+        throw new Error(MENSAJE_LOGIN_INVALIDO);
       }
 
       setActiveUser({
@@ -181,7 +187,8 @@ if (formLogin) {
         username: usuario.username,
         puntos: usuario.puntos ?? 0,
         kills: usuario.kills ?? 0,
-        fecha_lanzamiento: usuario.fecha_lanzamiento || ''
+        fecha_lanzamiento: usuario.fecha_lanzamiento || '',
+        foto_perfil: usuario.foto_perfil || ''
       });
 
       statusRegistro.textContent = `Sesion iniciada como ${usuario.username}`;
@@ -190,7 +197,7 @@ if (formLogin) {
       setTimeout(irARanking, 350);
     } catch (error) {
       statusRegistro.textContent = 'No se pudo iniciar sesion';
-      mostrarFeedback(error.message, 'error');
+      mostrarFeedback(MENSAJE_LOGIN_INVALIDO, 'error');
     }
   });
 }

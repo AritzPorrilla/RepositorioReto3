@@ -49,6 +49,33 @@ body {
   background: rgba(255, 74, 74, 0.26);
 }
 
+.top-corner-link {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 5;
+  text-decoration: none;
+  padding: 0.55rem 0.85rem;
+  font-weight: 700;
+  border-radius: 10px;
+  backdrop-filter: blur(5px);
+}
+
+.top-corner-avatar-link {
+  padding: 0.2rem;
+  border-radius: 999px;
+}
+
+.top-corner-avatar {
+  display: block;
+  width: 48px;
+  height: 48px;
+  border-radius: 999px;
+  object-fit: cover;
+  border: 1px solid rgba(190, 255, 158, 0.6);
+  background: rgba(10, 14, 10, 0.55);
+}
+
 .layout {
   position: relative;
   z-index: 1;
@@ -100,6 +127,79 @@ body {
 h2,
 h3 {
   margin-top: 0;
+}
+
+.perfil-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+}
+
+.perfil-estado {
+  margin: 0;
+  color: #d7ffc4;
+  font-size: 0.9rem;
+}
+
+.perfil-grid {
+  display: grid;
+  gap: 1rem;
+  margin-top: 0.8rem;
+}
+
+.perfil-foto-col {
+  display: grid;
+  justify-items: start;
+  gap: 0.6rem;
+}
+
+.perfil-foto {
+  width: 160px;
+  height: 160px;
+  border-radius: 14px;
+  object-fit: cover;
+  border: 1px solid rgba(190, 255, 158, 0.5);
+  background: rgba(10, 14, 10, 0.55);
+}
+
+.perfil-foto-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#perfil-foto-input {
+  display: none;
+}
+
+.perfil-foto-msg {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.perfil-form {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.perfil-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  color: #d7ffc4;
+  font-size: 0.9rem;
+}
+
+.perfil-actions {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.perfil-layout {
+  width: min(900px, 94vw);
 }
 
 .forms-grid {
@@ -243,5 +343,33 @@ tbody tr:nth-child(odd) {
 
   .forms-grid {
     grid-template-columns: 1fr 1fr;
+  }
+
+  .perfil-grid {
+    grid-template-columns: 200px 1fr;
+    align-items: start;
+  }
+}
+
+@media (max-width: 640px) {
+  .top-corner-link {
+    top: 0.65rem;
+    right: 0.65rem;
+    font-size: 0.85rem;
+    padding: 0.5rem 0.75rem;
+  }
+
+  .top-corner-avatar-link {
+    padding: 0.18rem;
+  }
+
+  .top-corner-avatar {
+    width: 42px;
+    height: 42px;
+  }
+
+  .perfil-foto {
+    width: 130px;
+    height: 130px;
   }
 }

@@ -7,7 +7,6 @@ function escapeRegex(value) {
 exports.index = async function(req, res) {
     try {
         const users = await User.get();
-        console.log(users);
         res.json({
             status: 'success',
             message: 'Users retrieved successfully',
@@ -45,7 +44,8 @@ exports.new = async function(req, res) {
             password: req.body.password,
             fecha_lanzamiento: req.body.fecha_lanzamiento,
             kills: req.body.kills,
-            puntos: req.body.puntos
+            puntos: req.body.puntos,
+            foto_perfil: req.body.foto_perfil || ''
         });
 
         const savedUser = await user.save();
@@ -96,11 +96,29 @@ exports.update = async function(req, res) {
             });
         }
 
-        user.username = req.body.username || user.username;
-        user.password = req.body.password || user.password;
-        user.fecha_lanzamiento = req.body.fecha_lanzamiento || user.fecha_lanzamiento;
-        user.kills = req.body.kills || user.kills;
-        user.puntos = req.body.puntos || user.puntos;
+        if (Object.prototype.hasOwnProperty.call(req.body, 'username')) {
+            user.username = req.body.username;
+        }
+
+        if (Object.prototype.hasOwnProperty.call(req.body, 'password') && req.body.password !== '') {
+            user.password = req.body.password;
+        }
+
+        if (Object.prototype.hasOwnProperty.call(req.body, 'fecha_lanzamiento')) {
+            user.fecha_lanzamiento = req.body.fecha_lanzamiento;
+        }
+
+        if (Object.prototype.hasOwnProperty.call(req.body, 'kills')) {
+            user.kills = req.body.kills;
+        }
+
+        if (Object.prototype.hasOwnProperty.call(req.body, 'puntos')) {
+            user.puntos = req.body.puntos;
+        }
+
+        if (Object.prototype.hasOwnProperty.call(req.body, 'foto_perfil')) {
+            user.foto_perfil = req.body.foto_perfil || '';
+        }
 
         const updatedUser = await user.save();
 

@@ -1,4 +1,4 @@
-const API_CANDIDATAS = [
+const API_GET_CANDIDATAS = [
     'http://192.168.0.84:8080/api/users',
 ];
 
@@ -14,15 +14,28 @@ const resumenRanking = document.getElementById('resumen-ranking');
 const sesionActiva = document.getElementById('sesion-activa');
 const busquedaNombre = document.getElementById('busqueda-nombre');
 const ordenRanking = document.getElementById('orden-ranking');
+const perfilEstado = document.getElementById('perfil-estado');
+const perfilForm = document.getElementById('perfil-form');
+const perfilUsernameInput = document.getElementById('perfil-username-input');
+const perfilPasswordInput = document.getElementById('perfil-password-input');
+const perfilKills = document.getElementById('perfil-kills');
+const perfilPuntos = document.getElementById('perfil-puntos');
+const perfilFecha = document.getElementById('perfil-fecha');
+const perfilFoto = document.getElementById('perfil-foto');
+const perfilFotoInput = document.getElementById('perfil-foto-input');
+const perfilFotoMsg = document.getElementById('perfil-foto-msg');
+const btnGuardarPerfil = document.getElementById('btn-guardar-perfil');
+const navPerfilFoto = document.getElementById('nav-perfil-foto');
 
 const PLAYALMI_SESSION_KEY = 'playalmi_active_user';
+const PLAYALMI_PHOTO_KEY_PREFIX = 'playalmi_profile_photo';
 
 const LIMITE_TOP = 10;
 
 let rankingActual = [];
 let mostrarTodos = false;
 let usuariosCargados = [];
-const usuarioActivo = getActiveUser();
+let usuarioActivo = getActiveUser();
 
 function getActiveUser() {
     try {
@@ -37,6 +50,21 @@ function clearActiveUser() {
     localStorage.removeItem(PLAYALMI_SESSION_KEY);
 }
 
+function setActiveUser(user) {
+    usuarioActivo = user;
+    localStorage.setItem(PLAYALMI_SESSION_KEY, JSON.stringify(user));
+}
+
+function getPhotoStorageKey(username) {
+    const normalizado = String(username || '').trim().toLowerCase();
+    return `${PLAYALMI_PHOTO_KEY_PREFIX}:${normalizado || 'anon'}`;
+}
+
+function getPhotoPlaceholderUrl(username) {
+    const texto = String(username || 'Perfil').trim() || 'Perfil';
+    return `https://placehold.co/180x180/1b2819/d7ffc4?text=${encodeURIComponent(texto)}`;
+}
+
 function enviarARegistro() {
     window.location.href = './registro.html';
 }
@@ -47,6 +75,13 @@ if (!usuarioActivo?.username) {
 
 if (sesionActiva && usuarioActivo?.username) {
     sesionActiva.textContent = `Sesion activa: ${usuarioActivo.username}`;
+}
+
+function setPerfilEstado(texto, tipo = 'ok') {
+    if (!perfilEstado) return;
+
+    perfilEstado.textContent = texto;
+    perfilEstado.style.color = tipo === 'error' ? '#ffc7c9' : '#d7ffc4';
 }
 
 function escapeHtml(valor) {
@@ -77,6 +112,72 @@ function getFechaTimestamp(usuario) {
     const date = new Date(raw);
     if (Number.isNaN(date.getTime())) return Number.POSITIVE_INFINITY;
     return date.getTime();
+}
+
+function getUsuarioActivoDesdeLista(usuarios) {
+    const idSesion = String(usuarioActivo?.id || '').trim();
+    const usernameSesion = String(usuarioActivo?.username || '').trim().toLowerCase();
+
+    if (idSesion) {
+        const porId = usuarios.find((usuario) => String(usuario?._id || '').trim() === idSesion);
+        if (porId) return porId;
+    }
+
+    if (!usernameSesion) {
+        return null;
+    }
+
+    return usuarios.find((usuario) => String(usuario?.username || '').trim().toLowerCase() === usernameSesion) || null;
+}
+
+function actualizarUIPerfil(usuario) {
+    const username = String(usuario?.username || usuarioActivo?.username || '');
+    const kills = usuario?.kills ?? usuarioActivo?.kills ?? 0;
+    const puntos = usuario?.puntos ?? usuarioActivo?.puntos ?? 0;
+    const fecha = usuario?.fecha_lanzamiento ?? usuarioActivo?.fecha_lanzamiento;
+    const fotoDb = String(usuario?.foto_perfil || usuarioActivo?.foto_perfil || '');
+
+    if (perfilUsernameInput) {
+        perfilUsernameInput.value = username;
+    }
+
+    if (perfilKills) {
+        perfilKills.textContent = String(kills);
+    }
+
+    if (perfilPuntos) {
+        perfilPuntos.textContent = String(puntos);
+    }
+
+    if (perfilFecha) {
+        perfilFecha.textContent = formatearFechaSoloYMD(fecha);
+    }
+
+    const fotoGuardada = localStorage.getItem(getPhotoStorageKey(username));
+    if (perfilFoto) {
+        perfilFoto.src = fotoDb || fotoGuardada || getPhotoPlaceholderUrl(username);
+    }
+
+    if (navPerfilFoto) {
+        navPerfilFoto.src = fotoDb || fotoGuardada || getPhotoPlaceholderUrl(username);
+    }
+
+    if (sesionActiva) {
+        sesionActiva.textContent = `Sesion activa: ${username || '-'}`;
+    }
+}
+
+function prepararSesionDesdeUsuario(usuario) {
+    if (!usuario) return;
+
+    setActiveUser({
+        id: usuario._id || usuarioActivo?.id || '',
+        username: usuario.username || usuarioActivo?.username || '',
+        puntos: usuario.puntos ?? usuarioActivo?.puntos ?? 0,
+        kills: usuario.kills ?? usuarioActivo?.kills ?? 0,
+        fecha_lanzamiento: usuario.fecha_lanzamiento || usuarioActivo?.fecha_lanzamiento || '',
+        foto_perfil: usuario.foto_perfil || usuarioActivo?.foto_perfil || ''
+    });
 }
 
 function filtrarYOrdenarUsuarios(usuarios) {
@@ -193,43 +294,230 @@ function renderTabla(usuarios) {
     }
 }
 
+async function fetchConFallback(urls, options) {
+    let ultimoError = null;
+
+    for (const url of urls) {
+        try {
+            const response = await fetch(url, options);
+            if (!response.ok) {
+                throw new Error(`Error HTTP ${response.status}`);
+            }
+
+            const payload = await response.json();
+            return { payload, url };
+        } catch (error) {
+            ultimoError = error;
+        }
+    }
+
+    throw ultimoError || new Error('No se pudo conectar con ninguna URL');
+}
+
+function getUpdateUrls(userId) {
+    return [
+        './proxy-update-user.php',
+        `http://localhost:8080/api/users/${encodeURIComponent(userId)}`,
+        `http://127.0.0.1:8080/api/users/${encodeURIComponent(userId)}`,
+        `http://192.168.0.84:8080/api/users/${encodeURIComponent(userId)}`,
+    ];
+}
+
+function initFotoPerfil() {
+    if (!perfilFotoInput || !perfilFotoMsg) return;
+
+    perfilFotoInput.addEventListener('change', () => {
+        const archivo = perfilFotoInput.files?.[0];
+        if (!archivo) return;
+
+        if (!archivo.type.startsWith('image/')) {
+            perfilFotoMsg.textContent = 'Selecciona una imagen valida.';
+            perfilFotoMsg.style.color = '#ffc7c9';
+            perfilFotoInput.value = '';
+            return;
+        }
+
+        if (archivo.size > 2 * 1024 * 1024) {
+            perfilFotoMsg.textContent = 'La imagen supera 2MB.';
+            perfilFotoMsg.style.color = '#ffc7c9';
+            perfilFotoInput.value = '';
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = () => {
+            const resultado = String(reader.result || '');
+            if (!resultado) {
+                perfilFotoMsg.textContent = 'No se pudo leer la imagen.';
+                perfilFotoMsg.style.color = '#ffc7c9';
+                return;
+            }
+
+            const key = getPhotoStorageKey(usuarioActivo?.username);
+            localStorage.setItem(key, resultado);
+
+            if (perfilFoto) {
+                perfilFoto.src = resultado;
+            }
+
+            perfilFotoMsg.textContent = 'Foto actualizada correctamente.';
+            perfilFotoMsg.style.color = '#bbf7b5';
+        };
+
+        reader.onerror = () => {
+            perfilFotoMsg.textContent = 'Error leyendo archivo.';
+            perfilFotoMsg.style.color = '#ffc7c9';
+        };
+
+        reader.readAsDataURL(archivo);
+    });
+}
+
+function initPerfilForm() {
+    if (!perfilForm) return;
+
+    perfilForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+
+        const usuarioLista = getUsuarioActivoDesdeLista(usuariosCargados);
+        const userId = String(usuarioLista?._id || usuarioActivo?.id || '').trim();
+        if (!userId) {
+            setPerfilEstado('No se encontro el usuario activo para actualizar.', 'error');
+            return;
+        }
+
+        const nuevoUsername = String(perfilUsernameInput?.value || '').trim();
+        const nuevoPassword = String(perfilPasswordInput?.value || '').trim();
+        const usernameActual = String(usuarioLista?.username || usuarioActivo?.username || '').trim();
+
+        if (nuevoUsername.length < 3) {
+            setPerfilEstado('El username debe tener al menos 3 caracteres.', 'error');
+            return;
+        }
+
+        if (nuevoPassword && nuevoPassword.length < 4) {
+            setPerfilEstado('La password debe tener al menos 4 caracteres.', 'error');
+            return;
+        }
+
+        const duplicado = usuariosCargados.some((usuario) => {
+            const mismoId = String(usuario?._id || '').trim() === userId;
+            const mismoUsername = String(usuario?.username || '').trim().toLowerCase() === nuevoUsername.toLowerCase();
+            return !mismoId && mismoUsername;
+        });
+
+        if (duplicado) {
+            setPerfilEstado('Ese username ya esta en uso por otro jugador.', 'error');
+            return;
+        }
+
+        setPerfilEstado('Guardando perfil...');
+        if (btnGuardarPerfil) {
+            btnGuardarPerfil.disabled = true;
+        }
+
+        try {
+            const updateUrls = getUpdateUrls(userId);
+            const payloadBase = {
+                username: nuevoUsername,
+            };
+
+            if (nuevoPassword) {
+                payloadBase.password = nuevoPassword;
+            }
+
+            let resultado = null;
+            let ultimoError = null;
+
+            for (const url of updateUrls) {
+                try {
+                    const body = url === './proxy-update-user.php'
+                        ? JSON.stringify({ user_id: userId, ...payloadBase })
+                        : JSON.stringify(payloadBase);
+
+                    const response = await fetch(url, {
+                        method: url === './proxy-update-user.php' ? 'POST' : 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`Error HTTP ${response.status}`);
+                    }
+
+                    const data = await response.json();
+                    resultado = {
+                        data,
+                        url
+                    };
+                    break;
+                } catch (error) {
+                    ultimoError = error;
+                }
+            }
+
+            if (!resultado) {
+                throw ultimoError || new Error('No se pudo actualizar el perfil');
+            }
+
+            const usuarioActualizado = resultado.data?.data || {};
+            const oldPhotoKey = getPhotoStorageKey(usernameActual);
+            const newPhotoKey = getPhotoStorageKey(nuevoUsername);
+            if (oldPhotoKey !== newPhotoKey) {
+                const fotoVieja = localStorage.getItem(oldPhotoKey);
+                if (fotoVieja) {
+                    localStorage.setItem(newPhotoKey, fotoVieja);
+                    localStorage.removeItem(oldPhotoKey);
+                }
+            }
+
+            prepararSesionDesdeUsuario({
+                _id: usuarioActualizado._id || userId,
+                username: usuarioActualizado.username || nuevoUsername,
+                kills: usuarioActualizado.kills ?? usuarioLista?.kills ?? 0,
+                puntos: usuarioActualizado.puntos ?? usuarioLista?.puntos ?? 0,
+                fecha_lanzamiento: usuarioActualizado.fecha_lanzamiento || usuarioLista?.fecha_lanzamiento || ''
+            });
+
+            actualizarUIPerfil(usuarioActualizado);
+            setPerfilEstado(`Perfil actualizado (${resultado.url}).`);
+            perfilPasswordInput.value = '';
+            await cargarUsuarios();
+        } catch (error) {
+            setPerfilEstado(`No se pudo guardar perfil: ${error.message}`, 'error');
+        } finally {
+            if (btnGuardarPerfil) {
+                btnGuardarPerfil.disabled = false;
+            }
+        }
+    });
+}
+
 async function cargarUsuarios() {
     estado.style.display = 'block';
     estado.innerHTML = '<p>Cargando datos del bunker...</p>';
     contenido.style.display = 'none';
 
     try {
-        let response = null;
-        let apiActiva = '';
-        let ultimoError = null;
-
-        for (const url of API_CANDIDATAS) {
-            try {
-                const intento = await fetch(url, { method: 'GET' });
-                if (!intento.ok) {
-                    throw new Error(`Error HTTP ${intento.status}`);
-                }
-
-                response = intento;
-                apiActiva = url;
-                break;
-            } catch (err) {
-                ultimoError = err;
-            }
-        }
-
-        if (!response) {
-            throw ultimoError || new Error('No se pudo conectar con ninguna URL de API');
-        }
-
-        const payload = await response.json();
+        const resultado = await fetchConFallback(API_GET_CANDIDATAS, { method: 'GET' });
+        const payload = resultado.payload;
         const usuarios = Array.isArray(payload?.data) ? payload.data : [];
         usuariosCargados = usuarios;
+
+        const usuarioLista = getUsuarioActivoDesdeLista(usuarios);
+        if (usuarioLista) {
+            prepararSesionDesdeUsuario(usuarioLista);
+            actualizarUIPerfil(usuarioLista);
+        } else {
+            actualizarUIPerfil(usuarioActivo || {});
+        }
 
         mostrarTodos = false;
         renderTabla(usuarios);
         totalUsuarios.textContent = String(usuarios.length);
-        statusText.textContent = `API conectada (${apiActiva})`;
+        statusText.textContent = `API conectada (${resultado.url})`;
         estado.style.display = 'none';
         contenido.style.display = 'block';
     } catch (error) {
@@ -240,6 +528,9 @@ async function cargarUsuarios() {
     }
 }
 
+actualizarUIPerfil(usuarioActivo || {});
+initFotoPerfil();
+initPerfilForm();
 cargarUsuarios();
 
 if (btnRecargar) {

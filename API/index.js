@@ -18,18 +18,19 @@ let app = express();
 //CONFIGURAR CORS
 app.use(cors());
 
-app.use(express.json());
+app.use(express.json({ limit: '8mb' }));
 
 app.use(bodyParser.urlencoded(
     {
-        extended: true
+        extended: true,
+        limit: '8mb'
     }
 ));
 
 let apiRoutes = require("./api-routes");
 app.use('/api', apiRoutes);
 
-app.use(bodyParser.json())
+app.use(bodyParser.json({ limit: '8mb' }))
 
 //CONEXION CON MONGO
 
