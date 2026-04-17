@@ -16,7 +16,7 @@ const perfilUsernameInput = document.getElementById('perfil-username-input');
 const perfilPasswordInput = document.getElementById('perfil-password-input');
 const perfilKills = document.getElementById('perfil-kills');
 const perfilPuntos = document.getElementById('perfil-puntos');
-const perfilFecha = document.getElementById('perfil-fecha');
+const perfilFecha = document.getElementById('perfil-fecha');  
 const perfilFoto = document.getElementById('perfil-foto');
 const perfilFotoInput = document.getElementById('perfil-foto-input');
 const perfilFotoMsg = document.getElementById('perfil-foto-msg');
@@ -96,7 +96,6 @@ function prepararSesionDesdeUsuario(usuario) {
   if (!usuario) return;
 
   setActiveUser({
-    id: usuario._id || usuarioActivo?.id || '',
     username: usuario.username || usuarioActivo?.username || '',
     puntos: usuario.puntos ?? usuarioActivo?.puntos ?? 0,
     kills: usuario.kills ?? usuarioActivo?.kills ?? 0,
@@ -166,7 +165,6 @@ function getUpdateUrls(userId) {
   return [
     './proxy-update-user.php',
     `http://localhost:8080/api/users/${encodeURIComponent(userId)}`,
-    `http://127.0.0.1:8080/api/users/${encodeURIComponent(userId)}`,
     `http://192.168.0.84:8080/api/users/${encodeURIComponent(userId)}`
   ];
 }
@@ -397,7 +395,7 @@ function initPerfilForm() {
       }
 
       actualizarUIPerfil(usuarioActualizado);
-      setPerfilEstado(`Perfil actualizado (${resultado.url}).`);
+      setPerfilEstado('Perfil actualizado correctamente.');
       perfilPasswordInput.value = '';
     } catch (error) {
       setPerfilEstado(`No se pudo guardar perfil: ${error.message}`, 'error');
@@ -425,7 +423,7 @@ async function cargarPerfil() {
 
     prepararSesionDesdeUsuario(usuarioLista);
     actualizarUIPerfil(usuarioLista);
-    setPerfilEstado(`Perfil conectado (${resultado.url}).`);
+    setPerfilEstado('Perfil cargado correctamente.');
   } catch (error) {
     setPerfilEstado(`Error al cargar perfil: ${error.message}`, 'error');
   }

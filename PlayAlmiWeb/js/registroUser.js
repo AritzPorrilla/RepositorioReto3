@@ -131,7 +131,7 @@ formRegistro.addEventListener('submit', async (event) => {
     }
 
     const resultado = await postConFallback(payload);
-    statusRegistro.textContent = `Registrado en API (${resultado.url})`;
+    statusRegistro.textContent = 'Registrado correctamente';
     mostrarFeedback('Jugador creado correctamente. Entrando al ranking...', 'ok');
 
     const creado = resultado?.data?.data || {};

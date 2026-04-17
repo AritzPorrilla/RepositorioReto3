@@ -13,16 +13,16 @@
 	<div class="fog fog-a" aria-hidden="true"></div>
 	<div class="fog fog-b" aria-hidden="true"></div>
 
-	<main class="layout">
-		<section class="hero panel reveal">
+	<main class="layout auth-layout">
+		<section class="hero panel reveal auth-hero">
 			<p class="eyebrow">Night Event - New Survivor</p>
 			<h1>Acceso de Jugadores</h1>
 			<p class="subtitle">Esta es la pagina de entrada: registrate o inicia sesion para pasar al ranking.</p>
 			<p class="status" id="status-registro">Listo para continuar</p>
 		</section>
 
-		<section class="panel reveal delay-1 forms-grid">
-			<div>
+		<section class="panel reveal delay-1 forms-grid auth-grid">
+			<div class="auth-card">
 				<h2>Registro</h2>
 				<form id="form-registro" class="form">
 					<label for="username">Usuario</label>
@@ -35,7 +35,7 @@
 				</form>
 			</div>
 
-			<div>
+			<div class="auth-card">
 				<h2>Iniciar sesion</h2>
 				<form id="form-login" class="form">
 					<label for="login-username">Usuario</label>
@@ -53,7 +53,6 @@
 	</main>
 
 	<footer class="panel" style="width:min(1100px,94vw); margin:0 auto 1.2rem; display:flex; justify-content:space-between; gap:1rem; flex-wrap:wrap;">
-		<span>Destino de registro: <code>/api/users (POST)</code></span>
 		<span>Despues de entrar te llevamos al ranking automaticamente</span>
 	</footer>
 

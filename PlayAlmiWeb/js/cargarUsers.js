@@ -482,7 +482,7 @@ function initPerfilForm() {
             });
 
             actualizarUIPerfil(usuarioActualizado);
-            setPerfilEstado(`Perfil actualizado (${resultado.url}).`);
+            setPerfilEstado('Perfil actualizado correctamente.');
             perfilPasswordInput.value = '';
             await cargarUsuarios();
         } catch (error) {
@@ -517,7 +517,7 @@ async function cargarUsuarios() {
         mostrarTodos = false;
         renderTabla(usuarios);
         totalUsuarios.textContent = String(usuarios.length);
-        statusText.textContent = `API conectada (${resultado.url})`;
+        statusText.textContent = 'API conectada';
         estado.style.display = 'none';
         contenido.style.display = 'block';
     } catch (error) {
