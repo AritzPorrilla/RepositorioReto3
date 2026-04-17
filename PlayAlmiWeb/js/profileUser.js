@@ -1,13 +1,13 @@
+const API_BASE_URL = 'http://192.168.0.84:8080';
+
 const API_GET_CANDIDATAS = [
   './proxy-users.php',
-  'http://localhost:8080/api/users',
-  'http://127.0.0.1:8080/api/users',
-  'http://192.168.0.84:8080/api/users'
+  `${API_BASE_URL}/api/users`
 ];
 
 const PLAYALMI_SESSION_KEY = 'playalmi_active_user';
 const PLAYALMI_PHOTO_KEY_PREFIX = 'playalmi_profile_photo';
-const DEFAULT_API_BASE_URL = 'http://192.168.0.84:8080';
+const DEFAULT_API_BASE_URL = API_BASE_URL;
 let apiBaseUrl = DEFAULT_API_BASE_URL;
 
 const perfilEstado = document.getElementById('perfil-estado');
@@ -241,9 +241,7 @@ async function fetchConFallback(urls, options) {
 function getUpdateUrls(userId) {
   return [
     './proxy-update-user.php',
-    `http://localhost:8080/api/users/${encodeURIComponent(userId)}`,
-    `http://127.0.0.1:8080/api/users/${encodeURIComponent(userId)}`,
-    `http://192.168.0.84:8080/api/users/${encodeURIComponent(userId)}`
+    `${API_BASE_URL}/api/users/${encodeURIComponent(userId)}`
   ];
 }
 
