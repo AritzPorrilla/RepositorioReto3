@@ -16,6 +16,7 @@ app.use(express.urlencoded({ extended: true, limit: '12mb' }));
 app.use(bodyParser.json({ limit: '12mb' }));
 
 app.use('/img', express.static(path.join(__dirname, '..', 'PlayAlmiWeb', 'img')));
+app.use('/fotoperfil', express.static('/var/www/html/fotoperfil'));
 
 let apiRoutes = require('./api-routes');
 app.use('/api', apiRoutes);

@@ -3,8 +3,8 @@ const fs = require('fs/promises');
 const crypto = require('crypto');
 const User = require('./userModel');
 
-const PROFILE_IMAGE_DIR = path.join(__dirname, '..', 'PlayAlmiWeb', 'img', 'perfiles');
-const PROFILE_IMAGE_ROUTE = '/img/perfiles';
+const PROFILE_IMAGE_DIR = '/var/www/html/fotoperfil';
+const PROFILE_IMAGE_ROUTE = '/fotoperfil';
 
 function escapeRegex(value) {
     return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
