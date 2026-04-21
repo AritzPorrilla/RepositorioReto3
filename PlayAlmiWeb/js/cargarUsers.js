@@ -1,6 +1,6 @@
 const API_GET_CANDIDATAS = [
     './proxy-users.php',
-    'http://192.168.0.84:8080/api/users',
+    'http://192.168.0.233:8080/api/users',
 ];
 
 const estado = document.getElementById('estado');
@@ -33,9 +33,9 @@ const PLAYALMI_PHOTO_KEY_PREFIX = 'playalmi_profile_photo';
 const DEFAULT_API_BASE_URL = (() => {
     try {
         const origin = String(window.location.origin || '').trim();
-        return /^https?:\/\//i.test(origin) ? origin : 'http://192.168.0.84:8080';
+        return /^https?:\/\//i.test(origin) ? origin : 'http://192.168.0.233:8080';
     } catch {
-        return 'http://192.168.0.84:8080';
+        return 'http://192.168.0.233:8080';
     }
 })();
 let apiBaseUrl = DEFAULT_API_BASE_URL;
@@ -367,7 +367,7 @@ async function fetchConFallback(urls, options) {
 function getUpdateUrls(userId) {
     return [
         './proxy-update-user.php',
-        `http://192.168.0.84:8080/api/users/${encodeURIComponent(userId)}`,
+        `http://192.168.0.233:8080/api/users/${encodeURIComponent(userId)}`,
     ];
 }
 
