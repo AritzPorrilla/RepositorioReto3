@@ -3,7 +3,7 @@ header('Content-Type: application/json; charset=utf-8');
 
 $target = getenv('PLAYALMI_API_USERS_URL');
 if (!$target) {
-    $target = 'http://192.168.0.233:8080/api/users';
+    $target = 'http://172.161.24.46:8080/api/users';
 }
 
 function error_response(int $status, string $message): void
