@@ -87,6 +87,19 @@ async function resolvePhotoFromDisk(username) {
     }
 }
 
+async function deleteProfileImages(username) {
+    const safeUsername = normalizePhotoKey(username);
+
+    try {
+        const files = await fs.readdir(PROFILE_IMAGE_DIR);
+        const matches = files.filter((name) => name.startsWith(`${safeUsername}-`));
+
+        await Promise.allSettled(matches.map((fileName) => fs.unlink(path.join(PROFILE_IMAGE_DIR, fileName))));
+    } catch {
+        // Best effort cleanup.
+    }
+}
+
 exports.index = async function(req, res) {
     try {
         const users = await User.get();
@@ -236,13 +249,17 @@ exports.update = async function(req, res) {
 
 exports.delete = async function(req, res) {
     try {
-        const user = await User.findByIdAndDelete(req.params.user_id);
+        const user = await User.findById(req.params.user_id);
         if (!user) {
             return res.status(404).json({
                 status: "error",
                 message: "User not found"
             });
         }
+
+        await deleteProfileImages(user.username);
+        await User.findByIdAndDelete(req.params.user_id);
+
         res.json({
             status: "Success",
             message: "User deleted"

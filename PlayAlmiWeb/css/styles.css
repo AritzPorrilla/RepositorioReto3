@@ -286,6 +286,12 @@ h3 {
   border-radius: 14px;
 }
 
+.perfil-delete-btn {
+  border-color: rgba(255, 90, 95, 0.6);
+  color: #ffc7c9;
+  background: rgba(255, 90, 95, 0.08);
+}
+
 .perfil-layout {
   width: min(1240px, 96vw);
 }
@@ -354,6 +360,11 @@ button:hover {
   background: transparent;
   border: 1px solid rgba(190, 255, 158, 0.5);
   color: #d7ffc4;
+}
+
+.ghost.perfil-delete-btn:hover {
+  background: rgba(255, 90, 95, 0.14);
+  border-color: rgba(255, 122, 126, 0.85);
 }
 
 .feedback {

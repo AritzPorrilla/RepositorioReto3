@@ -28,6 +28,7 @@ const perfilFoto = document.getElementById('perfil-foto');
 const perfilFotoInput = document.getElementById('perfil-foto-input');
 const perfilFotoMsg = document.getElementById('perfil-foto-msg');
 const btnGuardarPerfil = document.getElementById('btn-guardar-perfil');
+const btnEliminarCuenta = document.getElementById('btn-eliminar-cuenta');
 
 let usuariosCargados = [];
 let usuarioActivo = getActiveUser();
@@ -49,6 +50,19 @@ function setActiveUser(user) {
 
 function clearActiveUser() {
   localStorage.removeItem(PLAYALMI_SESSION_KEY);
+}
+
+function clearStoredProfilePhotos() {
+  const keys = [];
+
+  for (let index = 0; index < localStorage.length; index += 1) {
+    const key = localStorage.key(index);
+    if (key && key.startsWith(`${PLAYALMI_PHOTO_KEY_PREFIX}:`)) {
+      keys.push(key);
+    }
+  }
+
+  keys.forEach((key) => localStorage.removeItem(key));
 }
 
 function enviarARegistro() {
@@ -250,6 +264,13 @@ function getUpdateUrls(userId) {
   ];
 }
 
+function getDeleteUrls(userId) {
+  return [
+    './proxy-delete-user.php',
+    `http://172.161.24.46:8080/api/users/${encodeURIComponent(userId)}`
+  ];
+}
+
 function leerArchivoComoDataUrl(archivo) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -354,6 +375,41 @@ async function actualizarPerfilRemoto(payloadBase) {
   });
 
   return { resultado, usuarioActualizado, userId };
+}
+
+async function eliminarCuentaRemota() {
+  const usuarioLista = getUsuarioActivoDesdeLista(usuariosCargados);
+  const userId = String(usuarioLista?._id || usuarioActivo?.id || '').trim();
+  if (!userId) {
+    throw new Error('No se encontro el usuario activo para eliminar.');
+  }
+
+  const deleteUrls = getDeleteUrls(userId);
+  let ultimoError = null;
+
+  for (const url of deleteUrls) {
+    try {
+      const response = await fetch(url, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ user_id: userId })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error HTTP ${response.status}`);
+      }
+
+      const data = await response.json();
+      setApiBaseUrlFromUrl(url);
+      return data;
+    } catch (error) {
+      ultimoError = error;
+    }
+  }
+
+  throw ultimoError || new Error('No se pudo eliminar la cuenta');
 }
 
 function initFotoPerfil() {
@@ -535,6 +591,43 @@ if (btnLogout) {
   btnLogout.addEventListener('click', () => {
     clearActiveUser();
     enviarARegistro();
+  });
+}
+
+if (btnEliminarCuenta) {
+  btnEliminarCuenta.addEventListener('click', async () => {
+    const username = String(usuarioActivo?.username || '').trim();
+    if (!username) {
+      setPerfilEstado('No hay una cuenta activa para eliminar.', 'error');
+      return;
+    }
+
+    const confirmado = window.confirm('Esta accion eliminara tu cuenta de forma definitiva. \u00bfQuieres continuar?');
+    if (!confirmado) {
+      return;
+    }
+
+    btnEliminarCuenta.disabled = true;
+    if (btnGuardarPerfil) {
+      btnGuardarPerfil.disabled = true;
+    }
+
+    setPerfilEstado('Eliminando cuenta...');
+
+    try {
+      await eliminarCuentaRemota();
+      clearStoredProfilePhotos();
+      clearActiveUser();
+      fotoPerfilPreferida = '';
+      enviarARegistro();
+    } catch (error) {
+      setPerfilEstado(`No se pudo eliminar la cuenta: ${error.message}`, 'error');
+    } finally {
+      btnEliminarCuenta.disabled = false;
+      if (btnGuardarPerfil) {
+        btnGuardarPerfil.disabled = false;
+      }
+    }
   });
 }
 
