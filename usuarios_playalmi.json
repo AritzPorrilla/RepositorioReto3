@@ -13,4 +13,3 @@
 {"_id":{"$oid":"69e0c1978dc979a11b305aef"},"username":"Porti Huele a Cerrao","password":"6712312","fecha_lanzamiento":{"$date":"2012-12-31T00:00:00Z"},"kills":"20","puntos":200,"__v":0}
 {"_id":{"$oid":"69e0c3088dc979a11b305afa"},"username":"tony","password":"tony123","fecha_lanzamiento":{"$date":"2026-04-16T11:07:51.818Z"},"kills":"0","puntos":0,"__v":0}
 {"_id":{"$oid":"69e1d4694eec321ceec1c1c5"},"username":"Almi","password":"1234","fecha_lanzamiento":{"$date":"2026-04-17T06:34:17.711Z"},"kills":"0","puntos":0,"__v":0}
-mongoexport --db=PlayAlmi --collection=users --out=usuarios_playalmi.json
