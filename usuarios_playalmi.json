@@ -1,0 +1,15 @@
+{"_id":{"$oid":"69df4f25fe68da23d38563b1"},"username":"yery","password":"Almi123","fecha_lamzamiento":{"$date":"2012-05-12T00:00:00Z"},"kills":20,"puntos":200,"fecha_lanzamiento":{"$date":"2026-04-17T06:26:23.709Z"},"foto_perfil":"/img/perfiles/sergio-24bfc18f-4d9f-4f62-b087-c316336edb36.jpg"}
+{"_id":{"$oid":"69df4f25fe68da23d38563b2"},"username":"Iker","password":"Almi123","fecha_lamzamiento":{"$date":"2015-02-27T00:00:00Z"},"kills":5,"puntos":50,"fecha_lanzamiento":{"$date":"2026-04-21T10:53:32.122Z"},"foto_perfil":"/img/perfiles/iker-64b51d7e-2d5b-491a-8275-e1888863882e.jpg"}
+{"_id":{"$oid":"69e092f025b82e4250f6cdca"},"username":"Prueba","password":"123","fecha_lanzamiento":{"$date":"2017-02-25T00:00:00Z"},"kills":"167","puntos":5000,"__v":0}
+{"_id":{"$oid":"69e0b9bb8dc979a11b305a8f"},"username":"Por fin joder","password":"123","fecha_lanzamiento":{"$date":"2017-02-25T00:00:00Z"},"kills":"500","puntos":5000,"__v":0}
+{"_id":{"$oid":"69e0ba3d8dc979a11b305a96"},"username":"Añaño","password":"123","fecha_lanzamiento":{"$date":"2017-02-25T00:00:00Z"},"kills":"500","puntos":5000,"__v":0}
+{"_id":{"$oid":"69e0bdac8dc979a11b305ab6"},"username":"testuser123","password":"abcd1234","fecha_lanzamiento":{"$date":"2026-04-16T00:00:00Z"},"kills":"0","puntos":0,"__v":0}
+{"_id":{"$oid":"69e0be188dc979a11b305ab8"},"username":"testuser124","password":"abcd1234","fecha_lanzamiento":{"$date":"2026-04-16T00:00:00Z"},"kills":"0","puntos":0,"__v":0}
+{"_id":{"$oid":"69e0be318dc979a11b305abb"},"username":"nigght","password":"Almi123","fecha_lanzamiento":{"$date":"2026-04-16T10:47:13.073Z"},"kills":"0","puntos":0,"__v":0}
+{"_id":{"$oid":"69e0be438dc979a11b305abf"},"username":"nigger","password":"nigga123","fecha_lanzamiento":{"$date":"2026-04-16T10:47:30.689Z"},"kills":"0","puntos":0,"__v":0}
+{"_id":{"$oid":"69e0c0768dc979a11b305add"},"username":"cortogay","password":"12345","fecha_lanzamiento":{"$date":"2026-04-16T10:56:53.922Z"},"kills":"0","puntos":0,"__v":0}
+{"_id":{"$oid":"69e0c0c18dc979a11b305ae2"},"username":"aaa","password":"6767","fecha_lanzamiento":{"$date":"2006-12-31T00:00:00Z"},"kills":"670","puntos":6700,"__v":0}
+{"_id":{"$oid":"69e0c16c8dc979a11b305aec"},"username":"Akeyza","password":"6712312","fecha_lanzamiento":{"$date":"2046-12-31T00:00:00Z"},"kills":"1","puntos":10,"__v":0}
+{"_id":{"$oid":"69e0c1978dc979a11b305aef"},"username":"Porti Huele a Cerrao","password":"6712312","fecha_lanzamiento":{"$date":"2012-12-31T00:00:00Z"},"kills":"20","puntos":200,"__v":0}
+{"_id":{"$oid":"69e0c3088dc979a11b305afa"},"username":"tony","password":"tony123","fecha_lanzamiento":{"$date":"2026-04-16T11:07:51.818Z"},"kills":"0","puntos":0,"__v":0}
+{"_id":{"$oid":"69e1d4694eec321ceec1c1c5"},"username":"Almi","password":"1234","fecha_lanzamiento":{"$date":"2026-04-17T06:34:17.711Z"},"kills":"0","puntos":0,"__v":0}
