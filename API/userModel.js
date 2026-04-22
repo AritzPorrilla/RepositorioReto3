@@ -20,6 +20,10 @@ var userSchema = mongoose.Schema(
         puntos: {
             type: Number,
             required: true
+        },
+        foto_perfil: {
+            type: String,
+            default: ''
         }
     },
     { collection: 'users' }

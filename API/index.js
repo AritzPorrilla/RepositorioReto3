@@ -1,50 +1,39 @@
-//IMPORTAR EXPRESS
+// Importar express
 
 let express = require('express');
-
-//IMPORTAR BODY PARSER
-
+let path = require('path');
+let cors = require('cors');
 let bodyParser = require('body-parser');
-
-//IMPORTAR MONGOSE
-
 let mongoose = require('mongoose');
 
-//INICIALIZAR SERVIDOR
+// Inicializar servidor
 let app = express();
-app.use(express.json());
 
-app.use(bodyParser.urlencoded(
-    {
-        extended: true
-    }
-));
+// Configuracion
+app.use(cors());
+app.use(express.json({ limit: '12mb' }));
+app.use(express.urlencoded({ extended: true, limit: '12mb' }));
+app.use(bodyParser.json({ limit: '12mb' }));
 
-let apiRoutes = require("./api-routes");
+app.use('/img', express.static(path.join(__dirname, '..', 'PlayAlmiWeb', 'img')));
+app.use('/fotoperfil', express.static('/var/www/html/fotoperfil'));
+
+let apiRoutes = require('./api-routes');
 app.use('/api', apiRoutes);
 
-app.use(bodyParser.json())
-
-//CONEXION CON MONGO
-
+// Conexion con Mongo
 mongoose.connect('mongodb://localhost/PlayAlmi');
-var db= mongoose.connection;
-if(!db){
-    console.log("Error conecting DB");
-}else{
-    console.log("DB Conected");
-};
+var db = mongoose.connection;
+if (!db) {
+    console.log('Error conecting DB');
+} else {
+    console.log('DB Conected');
+}
 
 var port = process.env.PORT || 8080;
 
-//URL POR DEFECTO
+app.get('/', (req, res) => res.send('Web Service Reto 3'));
 
-app.get('/', (req,res) => res.send('Web Service Reto 3'));
-
-app.listen(port,function()
-{
-    console.log("Runnin WS NetAlmix");
+app.listen(port, function () {
+    console.log('Runnin WS PlayAlmi');
 });
-
-
-

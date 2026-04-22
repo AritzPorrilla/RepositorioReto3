@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>PlayAlmi | Mi Perfil</title>
+	<link rel="preconnect" href="https://fonts.googleapis.com" />
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+	<link href="https://fonts.googleapis.com/css2?family=Creepster&family=Chakra+Petch:wght@400;500;700&display=swap" rel="stylesheet" />
+	<link rel="stylesheet" href="./css/styles.css" />
+</head>
+<body>
+	<div class="fog fog-a" aria-hidden="true"></div>
+	<div class="fog fog-b" aria-hidden="true"></div>
+	<a href="./index.html" class="top-corner-link ghost">Volver al ranking</a>
+
+	<main class="layout perfil-layout">
+		<section class="hero panel reveal">
+			<p class="eyebrow">Control de superviviente</p>
+			<h1>Editar Mi Perfil</h1>
+			<p class="subtitle">Con sesion iniciada puedes actualizar tus datos y cambiar tu foto cuando quieras.</p>
+		</section>
+
+		<section class="panel perfil reveal delay-1 perfil-panel-large">
+			<div class="perfil-head">
+				<h2 class="perfil-title" style="margin:0;">Datos del perfil</h2>
+				<div style="display:flex; gap:0.55rem; align-items:center; flex-wrap:wrap;">
+					<p id="sesion-activa" style="margin:0; color:#d7ffc4; font-size:0.92rem;">Sesion activa: -</p>
+					<button id="btn-logout" class="ghost" type="button">Cerrar sesion</button>
+				</div>
+			</div>
+
+			<div class="perfil-grid">
+				<div class="perfil-foto-col">
+					<img id="perfil-foto" class="perfil-foto perfil-foto-large" src="https://placehold.co/180x180/1b2819/d7ffc4?text=Perfil" alt="Foto de perfil" />
+					<label for="perfil-foto-input" class="ghost perfil-foto-btn perfil-foto-btn-large">Cambiar foto</label>
+					<input id="perfil-foto-input" type="file" accept="image/*" />
+					<p id="perfil-foto-msg" class="perfil-foto-msg">PNG/JPG recomendado, maximo 2MB.</p>
+				</div>
+
+				<form id="perfil-form" class="perfil-form perfil-form-large" autocomplete="off">
+					<div>
+						<label for="perfil-username-input">Username</label>
+						<input id="perfil-username-input" class="perfil-input-large" type="text" minlength="3" required />
+					</div>
+					<div>
+						<label for="perfil-password-input">Nueva password (opcional)</label>
+						<input id="perfil-password-input" class="perfil-input-large" type="password" minlength="4" placeholder="Dejar vacio para no cambiar" />
+					</div>
+					<div class="perfil-stats">
+						<span>Kills: <strong id="perfil-kills">0</strong></span>
+						<span>Puntos: <strong id="perfil-puntos">0</strong></span>
+						<span>Registro: <strong id="perfil-fecha">-</strong></span>
+					</div>
+					<div class="perfil-actions">
+						<button id="btn-guardar-perfil" class="perfil-save-btn" type="submit">Guardar perfil</button>
+					</div>
+					<div class="perfil-alerta-box">
+						<p id="perfil-estado" class="status perfil-estado perfil-estado-inline">Cargando perfil...</p>
+					</div>
+				</form>
+			</div>
+		</section>
+	</main>
+
+	<script src="./js/profileUser.js"></script>
+</body>
+</html>
