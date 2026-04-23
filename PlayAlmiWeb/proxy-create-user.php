@@ -12,7 +12,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 $target = getenv('PLAYALMI_API_CREATE_USER_URL');
 if (!$target) {
-    $target = 'http://20.203.222.95:8080/api/usuarios';
+    $target = 'http://20.203.222.95:8080/api/users';
 }
 
 $rawBody = file_get_contents('php://input');

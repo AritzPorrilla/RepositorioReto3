@@ -1,6 +1,6 @@
 const API_GET_CANDIDATAS = [
     './proxy-users.php',
-    'http://20.203.222.95:8080/api/usuarios',
+    'http://20.203.222.95:8080/api/users',
 ];
 
 const estado = document.getElementById('estado');
@@ -77,7 +77,7 @@ function getPhotoPlaceholderUrl(username) {
 
 function setApiBaseUrlFromUrl(url) {
     const texto = String(url || '');
-    const indice = texto.indexOf('/api/usuarios');
+    const indice = texto.indexOf('/api/users');
     apiBaseUrl = indice >= 0 ? texto.slice(0, indice) : DEFAULT_API_BASE_URL;
 }
 
@@ -367,7 +367,7 @@ async function fetchConFallback(urls, options) {
 function getUpdateUrls(userId) {
     return [
         './proxy-update-user.php',
-        `http://20.203.222.95:8080/api/usuarios/${encodeURIComponent(userId)}`,
+        `http://20.203.222.95:8080/api/users/${encodeURIComponent(userId)}`,
     ];
 }
 
