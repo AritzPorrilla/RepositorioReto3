@@ -44,7 +44,7 @@ unset($input['user_id']);
 
 $targetBase = getenv('PLAYALMI_API_USERS_URL');
 if (!$targetBase) {
-    $targetBase = 'http://20.203.222.95:8080/api/users';
+    $targetBase = 'http://20.203.222.95:8080/api/usuarios';
 }
 
 $target = rtrim($targetBase, '/') . '/' . rawurlencode($userId);

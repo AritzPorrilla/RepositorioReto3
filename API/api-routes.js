@@ -9,14 +9,14 @@ router.get('/', function(req, res) {
 
 var userController = require('./userController');
 
-router.route('/users')
+router.route('/usuarios')
     .get(userController.index)
     .post(userController.new);
 
-router.route('/users/kills/:kills')
+router.route('/usuarios/kills/:kills')
     .get(userController.viewgenero);
 
-router.route('/users/:user_id')
+router.route('/usuarios/:user_id')
     .get(userController.view)
     .put(userController.update)
     .delete(userController.delete);

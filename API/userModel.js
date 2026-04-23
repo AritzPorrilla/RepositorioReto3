@@ -26,14 +26,20 @@ var userSchema = mongoose.Schema(
             default: ''
         }
     },
-    { collection: 'users' }
+    { collection: 'usuarios' }
 );
 
-var User = module.exports = mongoose.model('user', userSchema);
+var User = module.exports = mongoose.model('usuarios', userSchema);
 
 module.exports.get = async function(limit) {
     try {
-        return await User.find().limit(limit);
+        const query = User.find();
+
+        if (Number.isInteger(limit) && limit > 0) {
+            query.limit(limit);
+        }
+
+        return await query;
     } catch (error) {
         throw error;
     }
