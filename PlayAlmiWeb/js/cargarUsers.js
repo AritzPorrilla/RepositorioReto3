@@ -95,6 +95,10 @@ function resolvePhotoSrc(value, username) {
         return `${apiBaseUrl}${texto}`;
     }
 
+    if (texto.startsWith('/fotoperfil/')) {
+        return `${apiBaseUrl}${texto}`;
+    }
+
     if (texto.startsWith('img/')) {
         return `${apiBaseUrl}/${texto}`;
     }

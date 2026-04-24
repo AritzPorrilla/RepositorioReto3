@@ -5,6 +5,7 @@ const API_GET_CANDIDATAS = [
 
 const PLAYALMI_SESSION_KEY = 'playalmi_active_user';
 const PLAYALMI_PHOTO_KEY_PREFIX = 'playalmi_profile_photo';
+const PLAYALMI_PHOTO_PENDING_SYNC_KEY_PREFIX = 'playalmi_profile_photo_pending_sync';
 const DEFAULT_API_BASE_URL = (() => {
   try {
     const origin = String(window.location.origin || '').trim();
@@ -74,6 +75,35 @@ function getPhotoStorageKey(username) {
   return `${PLAYALMI_PHOTO_KEY_PREFIX}:${normalizado || 'anon'}`;
 }
 
+function getPhotoPendingSyncStorageKey(username) {
+  const normalizado = String(username || '').trim().toLowerCase();
+  return `${PLAYALMI_PHOTO_PENDING_SYNC_KEY_PREFIX}:${normalizado || 'anon'}`;
+}
+
+function markPhotoPendingSync(username) {
+  try {
+    localStorage.setItem(getPhotoPendingSyncStorageKey(username), '1');
+  } catch {
+    // Best effort.
+  }
+}
+
+function clearPhotoPendingSync(username) {
+  try {
+    localStorage.removeItem(getPhotoPendingSyncStorageKey(username));
+  } catch {
+    // Best effort.
+  }
+}
+
+function hasPhotoPendingSync(username) {
+  try {
+    return localStorage.getItem(getPhotoPendingSyncStorageKey(username)) === '1';
+  } catch {
+    return false;
+  }
+}
+
 function getPhotoPlaceholderUrl(username) {
   const texto = String(username || 'Perfil').trim() || 'Perfil';
   return `https://placehold.co/180x180/1b2819/d7ffc4?text=${encodeURIComponent(texto)}`;
@@ -99,6 +129,10 @@ function resolvePhotoSrc(value, username) {
     return `${apiBaseUrl}${texto}`;
   }
 
+  if (texto.startsWith('/fotoperfil/')) {
+    return `${apiBaseUrl}${texto}`;
+  }
+
   if (texto.startsWith('img/')) {
     return `${apiBaseUrl}/${texto}`;
   }
@@ -118,17 +152,33 @@ async function sincronizarFotoServidorSiHaceFalta(usuario) {
 
   const fotoServidor = String(usuario?.foto_perfil || usuarioActivo?.foto_perfil || '').trim();
   const fotoLocal = obtenerFotoLocalGuardada(username);
+  const pendiente = hasPhotoPendingSync(username);
   const fotoFuente = fotoServidor.startsWith('data:image/')
     ? fotoServidor
-    : (!fotoServidor && fotoLocal ? fotoLocal : '');
+    : ((!fotoServidor || pendiente) && fotoLocal ? fotoLocal : '');
 
   if (!fotoFuente) {
     return null;
   }
 
-  const { usuarioActualizado } = await actualizarPerfilRemoto({ foto_perfil: fotoFuente });
+  let usuarioActualizado = null;
+
+  try {
+    const resultadoSync = await actualizarPerfilRemoto({ foto_perfil: fotoFuente });
+    usuarioActualizado = resultadoSync.usuarioActualizado;
+  } catch {
+    markPhotoPendingSync(username);
+    // Si el servidor no puede guardar imagen, mantenemos la foto local sin romper la carga.
+    return null;
+  }
+
   const fotoFinal = String(usuarioActualizado.foto_perfil || fotoFuente).trim();
   fotoPerfilPreferida = fotoFinal;
+  if (usuarioActualizado?.foto_perfil) {
+    clearPhotoPendingSync(username);
+  } else {
+    markPhotoPendingSync(username);
+  }
 
   prepararSesionDesdeUsuario({
     _id: usuarioActualizado._id || usuario?._id || usuarioActivo?.id || '',
@@ -347,7 +397,19 @@ async function actualizarPerfilRemoto(payloadBase) {
       });
 
       if (!response.ok) {
-        throw new Error(`Error HTTP ${response.status}`);
+        const raw = await response.text();
+        let mensajeApi = '';
+
+        try {
+          const payloadError = JSON.parse(raw);
+          mensajeApi = String(payloadError?.message || payloadError?.error || '').trim();
+        } catch {
+          mensajeApi = String(raw || '').trim();
+        }
+
+        const error = new Error(mensajeApi || `Error HTTP ${response.status}`);
+        error.status = response.status;
+        throw error;
       }
 
       const data = await response.json();
@@ -459,6 +521,11 @@ function initFotoPerfil() {
       const fotoFinal = String(usuarioActualizado.foto_perfil || resultado).trim();
       fotoPerfilPreferida = fotoFinal;
       localStorage.setItem(getPhotoStorageKey(username), fotoFinal);
+      if (usuarioActualizado?.foto_perfil) {
+        clearPhotoPendingSync(username);
+      } else {
+        markPhotoPendingSync(username);
+      }
       setActiveUser({
         ...(usuarioActivo || {}),
         username: username || usuarioActivo?.username || '',
@@ -472,6 +539,32 @@ function initFotoPerfil() {
       perfilFotoMsg.textContent = 'Foto guardada en MongoDB correctamente.';
       perfilFotoMsg.style.color = '#bbf7b5';
     } catch (error) {
+      const status = Number(error?.status || 0);
+      const username = String(usuarioActivo?.username || '').trim();
+
+      // Fallback: si el backend falla guardando imagen, la mantenemos local para que el perfil funcione.
+      if (status === 500 && username) {
+        fotoPerfilPreferida = resultado;
+        localStorage.setItem(getPhotoStorageKey(username), resultado);
+        markPhotoPendingSync(username);
+
+        setActiveUser({
+          ...(usuarioActivo || {}),
+          username,
+          foto_perfil: resultado
+        });
+
+        actualizarUIPerfil({
+          ...(usuarioActivo || {}),
+          username,
+          foto_perfil: resultado
+        });
+
+        perfilFotoMsg.textContent = 'La API no pudo guardar la foto (500). Se guardo localmente en este navegador.';
+        perfilFotoMsg.style.color = '#ffc7c9';
+        return;
+      }
+
       if (perfilFoto) {
         perfilFoto.src = fotoAnterior;
       }

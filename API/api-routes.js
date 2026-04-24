@@ -9,6 +9,9 @@ router.get('/', function(req, res) {
 
 var userController = require('./userController');
 
+router.route('/login')
+    .post(userController.login);
+
 router.route('/users')
     .get(userController.index)
     .post(userController.new);

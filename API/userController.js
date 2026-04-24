@@ -3,8 +3,8 @@ const fs = require('fs/promises');
 const crypto = require('crypto');
 const User = require('./userModel');
 
-const PROFILE_IMAGE_DIR = '/var/www/html/fotoperfil';
-const PROFILE_IMAGE_ROUTE = '/fotoperfil';
+const PROFILE_IMAGE_DIR = path.join(__dirname, '..', 'PlayAlmiWeb', 'img', 'perfiles');
+const PROFILE_IMAGE_ROUTE = '/img/perfiles';
 
 function escapeRegex(value) {
     return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -60,6 +60,20 @@ async function persistProfileImage(photoValue, username) {
     await fs.writeFile(path.join(PROFILE_IMAGE_DIR, fileName), buffer);
 
     return `${PROFILE_IMAGE_ROUTE}/${fileName}`;
+}
+
+async function safePersistProfileImage(photoValue, username) {
+    const originalValue = String(photoValue || '').trim();
+
+    try {
+        return await persistProfileImage(photoValue, username);
+    } catch (error) {
+        console.error(`No se pudo guardar la foto de perfil para ${username}:`, error.message);
+
+        // Fallback multi-dispositivo: si no se puede persistir en disco,
+        // guardamos el valor original (incluyendo data URL) en Mongo.
+        return originalValue;
+    }
 }
 
 function normalizePhotoKey(username) {
@@ -157,7 +171,7 @@ exports.new = async function(req, res) {
             fecha_lanzamiento: req.body.fecha_lanzamiento,
             kills: req.body.kills,
             puntos: req.body.puntos,
-            foto_perfil: await persistProfileImage(req.body.foto_perfil, username)
+            foto_perfil: await safePersistProfileImage(req.body.foto_perfil, username)
         });
 
         const savedUser = await user.save();
@@ -169,6 +183,46 @@ exports.new = async function(req, res) {
     } catch (err) {
         res.status(500).json({
             message: 'Error creating user',
+            error: err.message
+        });
+    }
+};
+
+exports.login = async function(req, res) {
+    try {
+        const username = String(req.body.username || '').trim();
+        const password = String(req.body.password || '');
+
+        if (!username || !password) {
+            return res.status(400).json({
+                status: 'error',
+                message: 'Username and password are required'
+            });
+        }
+
+        const user = await User.findOne({
+            username: new RegExp(`^${escapeRegex(username)}$`, 'i')
+        });
+
+        if (!user || String(user.password || '') !== password) {
+            return res.status(401).json({
+                status: 'error',
+                message: 'Invalid credentials'
+            });
+        }
+
+        const userData = user.toObject();
+        delete userData.password;
+
+        return res.json({
+            status: 'success',
+            message: 'Login successful',
+            data: userData
+        });
+    } catch (err) {
+        return res.status(500).json({
+            status: 'error',
+            message: 'Error logging in',
             error: err.message
         });
     }
@@ -229,7 +283,7 @@ exports.update = async function(req, res) {
         }
 
         if (Object.prototype.hasOwnProperty.call(req.body, 'foto_perfil')) {
-            user.foto_perfil = await persistProfileImage(req.body.foto_perfil, user.username);
+            user.foto_perfil = await safePersistProfileImage(req.body.foto_perfil, user.username);
         }
 
         const updatedUser = await user.save();
