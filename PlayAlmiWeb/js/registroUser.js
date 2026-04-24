@@ -12,6 +12,14 @@ const PLAYALMI_SESSION_KEY = 'playalmi_active_user';
 const API_TIMEOUT_MS = 10000;
 const LAST_OK_POST_USERS_KEY = 'playalmi_last_ok_post_users';
 const LAST_OK_GET_USERS_KEY = 'playalmi_last_ok_get_users';
+const INLINE_PHOTO_PREFIX = 'playalmi-inline-image::';
+
+function empaquetarFotoParaApi(value) {
+  const texto = String(value || '').trim();
+  if (!texto) return '';
+  if (!/^data:image\//i.test(texto)) return texto;
+  return `${INLINE_PHOTO_PREFIX}${texto}`;
+}
 
 function isFileProtocol() {
   try {
@@ -421,7 +429,7 @@ formRegistro.addEventListener('submit', async (event) => {
     fecha_lanzamiento: fechaLanzamiento,
     kills: '0',
     puntos: 0,
-    foto_perfil: fotoPerfil
+    foto_perfil: empaquetarFotoParaApi(fotoPerfil)
   };
 
   try {
@@ -440,7 +448,7 @@ formRegistro.addEventListener('submit', async (event) => {
         const fotoCompat = await reducirDataUrlImagen(fotoPerfil, 320, 0.50);
         const payloadFotoReducida = {
           ...payload,
-          foto_perfil: fotoCompat
+          foto_perfil: empaquetarFotoParaApi(fotoCompat)
         };
         resultado = await postConFallback(payloadFotoReducida);
         fotoPerfil = fotoCompat;

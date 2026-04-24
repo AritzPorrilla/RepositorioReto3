@@ -6,6 +6,7 @@ const API_GET_CANDIDATAS = [
 const PLAYALMI_SESSION_KEY = 'playalmi_active_user';
 const PLAYALMI_PHOTO_KEY_PREFIX = 'playalmi_profile_photo';
 const PLAYALMI_PHOTO_PENDING_SYNC_KEY_PREFIX = 'playalmi_profile_photo_pending_sync';
+const INLINE_PHOTO_PREFIX = 'playalmi-inline-image::';
 const DEFAULT_API_BASE_URL = (() => {
   try {
     const origin = String(window.location.origin || '').trim();
@@ -119,6 +120,10 @@ function resolvePhotoSrc(value, username) {
   const texto = String(value || '').trim();
   if (!texto) {
     return getPhotoPlaceholderUrl(username);
+  }
+
+  if (texto.startsWith(INLINE_PHOTO_PREFIX)) {
+    return texto.slice(INLINE_PHOTO_PREFIX.length);
   }
 
   if (/^(data:|https?:\/\/)/i.test(texto)) {
@@ -518,7 +523,7 @@ function initFotoPerfil() {
 
       const { usuarioActualizado } = await actualizarPerfilRemoto({ foto_perfil: resultado });
       const username = usuarioActualizado.username || usuarioActivo?.username;
-      const fotoFinal = String(usuarioActualizado.foto_perfil || resultado).trim();
+      const fotoFinal = String(usuarioActualizado.foto_perfil || `playalmi-inline-image::${resultado}`).trim();
       fotoPerfilPreferida = fotoFinal;
       localStorage.setItem(getPhotoStorageKey(username), fotoFinal);
       if (usuarioActualizado?.foto_perfil) {
