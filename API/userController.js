@@ -56,10 +56,15 @@ async function persistProfileImage(photoValue, username) {
         .slice(0, 24) || 'perfil';
     const fileName = `${safeUsername}-${crypto.randomUUID()}.${getImageExtension(mimeType)}`;
 
-    await fs.mkdir(PROFILE_IMAGE_DIR, { recursive: true });
-    await fs.writeFile(path.join(PROFILE_IMAGE_DIR, fileName), buffer);
-
-    return `${PROFILE_IMAGE_ROUTE}/${fileName}`;
+    try {
+        await fs.mkdir(PROFILE_IMAGE_DIR, { recursive: true });
+        await fs.writeFile(path.join(PROFILE_IMAGE_DIR, fileName), buffer);
+        return `${PROFILE_IMAGE_ROUTE}/${fileName}`;
+    } catch {
+        // Si el servidor no puede escribir en disco, conservamos la imagen original
+        // para evitar que el guardado del perfil falle con HTTP 500.
+        return value;
+    }
 }
 
 function normalizePhotoKey(username) {
@@ -186,6 +191,23 @@ exports.view = async function(req, res) {
 };
 
 exports.update = async function(req, res) {
+
+            // Validación opcional de acceso: solo si se envía authenticatedUserId
+            const authenticatedUserId = req.body.authenticatedUserId;
+            if (authenticatedUserId && authenticatedUserId !== req.params.user_id) {
+                return res.status(403).json({ 
+                    status: 'error', 
+                    message: 'No puedes editar el perfil de otro usuario' 
+                });
+            }
+    // Validación opcional de acceso: solo si se envía authenticatedUserId
+    const authenticatedUserId = req.body.authenticatedUserId;
+    if (authenticatedUserId && authenticatedUserId !== req.params.user_id) {
+        return res.status(403).json({ 
+            status: 'error', 
+            message: 'No puedes editar el perfil de otro usuario' 
+        });
+    }
     try {
         const user = await User.findById(req.params.user_id);
         if (!user) {
@@ -235,6 +257,23 @@ exports.update = async function(req, res) {
 
 
 exports.delete = async function(req, res) {
+            // Validación opcional de acceso: solo si se envía authenticatedUserId
+            const authenticatedUserId = req.body.authenticatedUserId;
+            if (authenticatedUserId && authenticatedUserId !== req.params.user_id) {
+                return res.status(403).json({ 
+                    status: 'error', 
+                    message: 'No puedes borrar el perfil de otro usuario' 
+                });
+            }
+
+    // Validación opcional de acceso: solo si se envía authenticatedUserId
+    const authenticatedUserId = req.body.authenticatedUserId;
+    if (authenticatedUserId && authenticatedUserId !== req.params.user_id) {
+        return res.status(403).json({ 
+            status: 'error', 
+            message: 'No puedes borrar el perfil de otro usuario' 
+        });
+    }
     try {
         const user = await User.findByIdAndDelete(req.params.user_id);
         if (!user) {

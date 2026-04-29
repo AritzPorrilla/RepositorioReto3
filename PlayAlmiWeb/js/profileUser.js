@@ -1,6 +1,6 @@
 const API_GET_CANDIDATAS = [
   './proxy-users.php',
-  'http://172.161.24.46:8080/api/users'
+  'http://20.203.222.95:8080/api/users'
 ];
 
 const PLAYALMI_SESSION_KEY = 'playalmi_active_user';
@@ -8,9 +8,9 @@ const PLAYALMI_PHOTO_KEY_PREFIX = 'playalmi_profile_photo';
 const DEFAULT_API_BASE_URL = (() => {
   try {
     const origin = String(window.location.origin || '').trim();
-    return /^https?:\/\//i.test(origin) ? origin : 'http://172.161.24.46:8080';
+    return /^https?:\/\//i.test(origin) ? origin : 'http://20.203.222.95:8080';
   } catch {
-    return 'http://172.161.24.46:8080';
+    return 'http://20.203.222.95:8080';
   }
 })();
 let apiBaseUrl = DEFAULT_API_BASE_URL;
@@ -85,8 +85,16 @@ function resolvePhotoSrc(value, username) {
     return `${apiBaseUrl}${texto}`;
   }
 
+  if (texto.startsWith('/fotoperfil/')) {
+    return texto;
+  }
+
   if (texto.startsWith('img/')) {
     return `${apiBaseUrl}/${texto}`;
+  }
+
+  if (texto.startsWith('fotoperfil/')) {
+    return `/${texto}`;
   }
 
   return texto;
@@ -246,7 +254,7 @@ async function fetchConFallback(urls, options) {
 function getUpdateUrls(userId) {
   return [
     './proxy-update-user.php',
-    `http://172.161.24.46:8080/api/users/${encodeURIComponent(userId)}`
+    `http://20.203.222.95:8080/api/users/${encodeURIComponent(userId)}`
   ];
 }
 
@@ -315,7 +323,7 @@ async function actualizarPerfilRemoto(payloadBase) {
     try {
       const body = url === './proxy-update-user.php'
         ? JSON.stringify({ user_id: userId, ...payloadBase })
-        : JSON.stringify(payloadBase);
+        : JSON.stringify({ authenticatedUserId: userId, ...payloadBase });
 
       const response = await fetch(url, {
         method: url === './proxy-update-user.php' ? 'POST' : 'PUT',
