@@ -1,12 +1,12 @@
 :root {
-  --bg: #151316;
-  --panel: rgba(26, 31, 27, 0.84);
-  --line: rgba(163, 255, 117, 0.2);
-  --ink: #edf7e8;
-  --muted: #a7b8a1;
-  --accent: #89ff42;
-  --accent-strong: #5cbc23;
-  --danger: #ff5a5f;
+  --bg: #0a1a0a;
+  --panel: rgba(15, 35, 15, 0.9);
+  --line: rgba(76, 200, 76, 0.3);
+  --ink: #7eff7e;
+  --muted: #558055;
+  --accent: #4cff4c;
+  --accent-strong: #2d8c2d;
+  --danger: #66ff66;
 }
 
 * {
@@ -19,9 +19,9 @@ body {
   color: var(--ink);
   font-family: "Chakra Petch", sans-serif;
   background:
-    radial-gradient(900px 500px at 85% 10%, rgba(137, 255, 66, 0.12), transparent 60%),
-    radial-gradient(900px 500px at 10% 90%, rgba(255, 90, 95, 0.08), transparent 55%),
-    linear-gradient(180deg, #0f0f13 0%, #181a14 55%, #12130f 100%);
+    radial-gradient(900px 500px at 85% 10%, rgba(76, 200, 76, 0.15), transparent 60%),
+    radial-gradient(900px 500px at 10% 90%, rgba(50, 150, 50, 0.1), transparent 55%),
+    linear-gradient(180deg, #050f05 0%, #0a1a0a 55%, #081108 100%);
   overflow-x: hidden;
 }
 
@@ -38,7 +38,7 @@ body {
   height: 380px;
   right: -100px;
   top: -130px;
-  background: rgba(124, 255, 0, 0.35);
+  background: rgba(76, 200, 76, 0.25);
 }
 
 .fog-b {
@@ -46,7 +46,7 @@ body {
   height: 320px;
   left: -80px;
   bottom: -120px;
-  background: rgba(255, 74, 74, 0.26);
+  background: rgba(50, 150, 50, 0.2);
 }
 
 .top-corner-link {
@@ -72,9 +72,9 @@ body {
   height: 72px;
   border-radius: 999px;
   object-fit: cover;
-  border: 2px solid rgba(190, 255, 158, 0.75);
-  background: rgba(10, 14, 10, 0.55);
-  box-shadow: 0 0 0 3px rgba(137, 255, 66, 0.15);
+  border: 2px solid rgba(76, 200, 76, 0.8);
+  background: rgba(5, 15, 5, 0.7);
+  box-shadow: 0 0 0 3px rgba(76, 200, 76, 0.25);
 }
 
 .layout {
@@ -139,14 +139,14 @@ body {
   font-size: clamp(2.2rem, 5vw, 3.6rem);
   margin: 0;
   letter-spacing: 0.03em;
-  color: #c4ff98;
+  color: #7eff7e;
 }
 
 .eyebrow {
   margin: 0;
   text-transform: uppercase;
   letter-spacing: 0.09em;
-  color: #ffe36a;
+  color: #66ff66;
   font-size: 0.78rem;
 }
 
@@ -160,20 +160,20 @@ body {
   margin: 0;
   padding: 0.35rem 0.75rem;
   border-radius: 999px;
-  background: rgba(96, 169, 55, 0.18);
-  border: 1px solid rgba(151, 255, 85, 0.35);
+  background: rgba(50, 150, 50, 0.2);
+  border: 1px solid rgba(76, 200, 76, 0.4);
 }
 
 .status.alert-success {
-  color: #bbf7b5;
-  background: rgba(73, 190, 95, 0.22);
-  border-color: rgba(117, 255, 139, 0.45);
+  color: #66ff66;
+  background: rgba(50, 150, 50, 0.25);
+  border-color: rgba(76, 200, 76, 0.5);
 }
 
 .status.alert-error {
-  color: #ffc7c9;
-  background: rgba(255, 90, 95, 0.22);
-  border-color: rgba(255, 122, 126, 0.45);
+  color: #ff8888;
+  background: rgba(76, 200, 76, 0.15);
+  border-color: rgba(76, 200, 76, 0.4);
 }
 
 h2,
@@ -191,7 +191,7 @@ h3 {
 
 .perfil-estado {
   margin: 0;
-  color: #d7ffc4;
+  color: #7eff7e;
   font-size: 0.9rem;
 }
 
@@ -212,8 +212,8 @@ h3 {
   height: 220px;
   border-radius: 18px;
   object-fit: cover;
-  border: 1px solid rgba(190, 255, 158, 0.5);
-  background: rgba(10, 14, 10, 0.55);
+  border: 1px solid rgba(76, 200, 76, 0.6);
+  background: rgba(5, 15, 5, 0.7);
 }
 
 .perfil-foto-large {
@@ -254,7 +254,7 @@ h3 {
   display: flex;
   flex-wrap: wrap;
   gap: 1rem;
-  color: #d7ffc4;
+  color: #7eff7e;
   font-size: 1rem;
 }
 
@@ -287,9 +287,9 @@ h3 {
 }
 
 .perfil-delete-btn {
-  border-color: rgba(255, 90, 95, 0.6);
-  color: #ffc7c9;
-  background: rgba(255, 90, 95, 0.08);
+  border-color: rgba(76, 200, 76, 0.5);
+  color: #7eff7e;
+  background: rgba(76, 200, 76, 0.1);
 }
 
 .perfil-layout {
@@ -313,10 +313,10 @@ h3 {
 .form {
   display: grid;
   gap: 0.7rem;
-  border: 1px solid rgba(146, 240, 105, 0.2);
+  border: 1px solid rgba(76, 200, 76, 0.25);
   border-radius: 16px;
   padding: 1.1rem;
-  background: rgba(11, 13, 10, 0.4);
+  background: rgba(5, 10, 5, 0.5);
 }
 
 label {
@@ -326,9 +326,9 @@ label {
 
 input {
   width: 100%;
-  border: 1px solid rgba(162, 255, 117, 0.25);
+  border: 1px solid rgba(76, 200, 76, 0.3);
   border-radius: 12px;
-  background: rgba(19, 24, 18, 0.9);
+  background: rgba(10, 20, 10, 0.7);
   color: var(--ink);
   padding: 0.9rem 0.95rem;
   font: inherit;
@@ -336,20 +336,20 @@ input {
 }
 
 input:focus {
-  outline: 2px solid rgba(124, 255, 0, 0.35);
+  outline: 2px solid rgba(76, 200, 76, 0.4);
 }
 
 input.input-error {
-  border-color: rgba(255, 90, 95, 0.95);
-  box-shadow: 0 0 0 2px rgba(255, 90, 95, 0.18);
+  border-color: rgba(76, 200, 76, 0.8);
+  box-shadow: 0 0 0 2px rgba(76, 200, 76, 0.15);
 }
 
 button {
   border: 0;
   border-radius: 12px;
   padding: 0.9rem 1.1rem;
-  background: linear-gradient(135deg, var(--accent), #c4ff98);
-  color: #172610;
+  background: linear-gradient(135deg, var(--accent), #66ff66);
+  color: #051a05;
   font-weight: 700;
   cursor: pointer;
   transition: transform 160ms ease, filter 160ms ease;
@@ -363,13 +363,13 @@ button:hover {
 
 .ghost {
   background: transparent;
-  border: 1px solid rgba(190, 255, 158, 0.5);
-  color: #d7ffc4;
+  border: 1px solid rgba(76, 200, 76, 0.5);
+  color: #7eff7e;
 }
 
 .ghost.perfil-delete-btn:hover {
-  background: rgba(255, 90, 95, 0.14);
-  border-color: rgba(255, 122, 126, 0.85);
+  background: rgba(76, 200, 76, 0.15);
+  border-color: rgba(76, 200, 76, 0.8);
 }
 
 .feedback {
@@ -380,13 +380,13 @@ button:hover {
 }
 
 .feedback.ok {
-  background: rgba(73, 190, 95, 0.22);
-  color: #bbf7b5;
+  background: rgba(50, 150, 50, 0.25);
+  color: #7eff7e;
 }
 
 .feedback.error {
-  background: rgba(255, 90, 95, 0.22);
-  color: #ffc7c9;
+  background: rgba(76, 200, 76, 0.15);
+  color: #66ff66;
 }
 
 .score-form {
@@ -400,20 +400,20 @@ button:hover {
 table {
   width: 100%;
   border-collapse: collapse;
-  border: 1px solid rgba(141, 255, 141, 0.2);
+  border: 1px solid rgba(76, 200, 76, 0.25);
   overflow: hidden;
   border-radius: 12px;
 }
 
 thead {
-  background: rgba(137, 255, 66, 0.16);
+  background: rgba(50, 150, 50, 0.15);
 }
 
 th,
 td {
   padding: 0.72rem 0.6rem;
   text-align: left;
-  border-bottom: 1px solid rgba(162, 255, 117, 0.16);
+  border-bottom: 1px solid rgba(76, 200, 76, 0.2);
 }
 
 .ranking-avatar {
@@ -422,8 +422,8 @@ td {
   height: 44px;
   border-radius: 999px;
   object-fit: cover;
-  border: 1px solid rgba(190, 255, 158, 0.65);
-  background: rgba(10, 14, 10, 0.55);
+  border: 1px solid rgba(76, 200, 76, 0.6);
+  background: rgba(5, 15, 5, 0.7);
 }
 
 th:nth-child(2),

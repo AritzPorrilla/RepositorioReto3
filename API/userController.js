@@ -102,6 +102,12 @@ exports.update = async function (req, res) {
         const user = await User.findById(req.params.user_id);
         if (!user) return res.status(404).json({ status: 'error', message: 'User not found' });
  
+        // Validar que el usuario autenticado sea el dueño del perfil
+        const authenticatedUserId = req.body.authenticatedUserId;
+        if (!authenticatedUserId || authenticatedUserId !== req.params.user_id) {
+            return res.status(403).json({ status: 'error', message: 'No puedes editar el perfil de otro usuario' });
+        }
+
         const body = req.body;
         if ('username'          in body) user.username          = body.username;
         if ('password'          in body && body.password !== '') user.password = body.password;
@@ -109,27 +115,33 @@ exports.update = async function (req, res) {
         if ('kills'             in body) user.kills             = body.kills;
         if ('puntos'            in body) user.puntos            = body.puntos;
         if ('foto_perfil'       in body) user.foto_perfil       = resolvePhotoValue(body.foto_perfil);
- 
+
         const updated = await user.save();
         res.json({ message: 'User updated', data: updated });
     } catch (err) {
         res.status(500).json({ message: 'Error updating user', error: err.message });
     }
 };
- 
+
 // DELETE /api/users/:user_id
 exports.delete = async function (req, res) {
     try {
         const user = await User.findById(req.params.user_id);
         if (!user) return res.status(404).json({ status: 'error', message: 'User not found' });
- 
+
+        // Validar que el usuario autenticado sea el dueño del perfil
+        const authenticatedUserId = req.body.authenticatedUserId;
+        if (!authenticatedUserId || authenticatedUserId !== req.params.user_id) {
+            return res.status(403).json({ status: 'error', message: 'No puedes borrar el perfil de otro usuario' });
+        }
+
         await User.findByIdAndDelete(req.params.user_id);
         res.json({ status: 'Success', message: 'User deleted' });
     } catch (err) {
         res.status(500).json({ message: 'Error deleting user', error: err.message });
     }
 };
- 
+
 // GET /api/users/kills/:kills
 exports.viewgenero = async function (req, res) {
     try {
