@@ -349,8 +349,8 @@ async function actualizarPerfilRemoto(payloadBase) {
   for (const url of updateUrls) {
     try {
       const body = url === './proxy-update-user.php'
-        ? JSON.stringify({ user_id: userId, ...payloadBase })
-        : JSON.stringify(payloadBase);
+        ? JSON.stringify({ user_id: userId, authenticatedUserId: userId, ...payloadBase })
+        : JSON.stringify({ authenticatedUserId: userId, ...payloadBase });
 
       const response = await fetchConTimeout(url, {
         method: url === './proxy-update-user.php' ? 'POST' : 'PUT',
