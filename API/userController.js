@@ -1,4 +1,10 @@
+const fs = require('fs/promises');
+const path = require('path');
+const crypto = require('crypto');
 const User = require('./userModel');
+
+const PROFILE_IMAGE_DIR = '/var/www/html/fotoperfil';
+const PROFILE_IMAGE_ROUTE = '/fotoperfil';
  
 function escapeRegex(value) {
     return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -7,10 +13,22 @@ function escapeRegex(value) {
 function isDataImage(value) {
     return /^data:image\/[a-zA-Z0-9.+-]+;base64,/.test(String(value || ''));
 }
+
+function getImageExtension(mimeType) {
+    const normalized = String(mimeType || '').toLowerCase();
+
+    if (normalized === 'image/jpeg' || normalized === 'image/jpg') return 'jpg';
+    if (normalized === 'image/png') return 'png';
+    if (normalized === 'image/webp') return 'webp';
+    if (normalized === 'image/gif') return 'gif';
+    if (normalized === 'image/avif') return 'avif';
+
+    return 'png';
+}
  
 // Normaliza el valor de foto antes de guardarlo en MongoDB.
 // Las fotos base64 se almacenan directamente → accesibles desde cualquier equipo.
-function resolvePhotoValue(raw) {
+async function resolvePhotoValue(raw, username) {
     // El frontend puede enviar el prefijo legacy "playalmi-inline-image::", lo eliminamos
     const INLINE_PFX = 'playalmi-inline-image::';
     let value = String(raw || '').trim();
@@ -96,7 +114,7 @@ exports.new = async function (req, res) {
             fecha_lanzamiento:  req.body.fecha_lanzamiento,
             kills:              req.body.kills,
             puntos:             req.body.puntos,
-            foto_perfil:        resolvePhotoValue(req.body.foto_perfil),
+            foto_perfil:        await resolvePhotoValue(req.body.foto_perfil, username),
         });
  
         const saved = await user.save();
@@ -130,7 +148,7 @@ exports.login = async function (req, res) {
     }
 };
 
-exports.update = async function(req, res) {
+exports.view = async function(req, res) {
     try {
         const user = await User.findById(req.params.user_id);
         if (!user) return res.status(404).json({ status: 'error', message: 'User not found' });
@@ -158,7 +176,7 @@ exports.update = async function (req, res) {
         if ('fecha_lanzamiento' in body) user.fecha_lanzamiento = body.fecha_lanzamiento;
         if ('kills'             in body) user.kills             = body.kills;
         if ('puntos'            in body) user.puntos            = body.puntos;
-        if ('foto_perfil'       in body) user.foto_perfil       = resolvePhotoValue(body.foto_perfil);
+        if ('foto_perfil'       in body) user.foto_perfil       = await resolvePhotoValue(body.foto_perfil, user.username);
 
         const updated = await user.save();
         res.json({ message: 'User updated', data: updated });
