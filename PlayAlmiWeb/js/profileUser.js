@@ -280,7 +280,7 @@ function getUpdateUrls(userId, preferDirect = false) {
 function getDeleteUrls(userId) {
   return [
     './proxy-update-user.php',
-    `http://172.161.24.46:8080/api/users/${encodeURIComponent(userId)}`
+    `http://20.203.222.95:8080/api/users/${encodeURIComponent(userId)}`
   ];
 }
 

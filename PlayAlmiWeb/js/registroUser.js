@@ -1,9 +1,9 @@
 const API_POST_CANDIDATAS = [
   './proxy-create-user.php',
-  'http://172.161.24.46:8080/api/users'
+  'http://20.203.222.95:8080/api/users'
 ];
 
-const API_GET_USERS = ['./proxy-users.php', 'http://172.161.24.46:8080/api/users'];
+const API_GET_USERS = ['./proxy-users.php', 'http://20.203.222.95:8080/api/users'];
 
 const formRegistro = document.getElementById('form-registro');
 const formLogin = document.getElementById('form-login');
