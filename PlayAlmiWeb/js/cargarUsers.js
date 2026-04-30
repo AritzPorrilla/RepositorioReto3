@@ -30,6 +30,7 @@ const navPerfilFoto = document.getElementById('nav-perfil-foto');
 
 const PLAYALMI_SESSION_KEY = 'playalmi_active_user';
 const PLAYALMI_PHOTO_KEY_PREFIX = 'playalmi_profile_photo';
+const INLINE_PHOTO_PREFIX = 'playalmi-inline-image::';
 const DEFAULT_API_BASE_URL = (() => {
     try {
         const origin = String(window.location.origin || '').trim();
@@ -87,16 +88,16 @@ function resolvePhotoSrc(value, username) {
         return getPhotoPlaceholderUrl(username);
     }
 
+    if (texto.startsWith(INLINE_PHOTO_PREFIX)) {
+        return texto.slice(INLINE_PHOTO_PREFIX.length);
+    }
+
     if (/^(data:|https?:\/\/)/i.test(texto)) {
         return texto;
     }
 
     if (texto.startsWith('/img/')) {
         return `${apiBaseUrl}${texto}`;
-    }
-
-    if (texto.startsWith('/fotoperfil/')) {
-        return texto;
     }
 
     if (texto.startsWith('img/')) {

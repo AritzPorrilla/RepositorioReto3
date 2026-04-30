@@ -22,13 +22,34 @@ let apiRoutes = require('./api-routes');
 app.use('/api', apiRoutes);
 
 // Conexion con Mongo
-mongoose.connect('mongodb://localhost/PlayAlmi');
-var db = mongoose.connection;
-if (!db) {
-    console.log('Error conecting DB');
-} else {
-    console.log('DB Conected');
-}
+const mongoUri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017';
+const mongoDbName = process.env.MONGODB_DB || 'PlayAlmi';
+
+mongoose.connect(mongoUri, { dbName: mongoDbName })
+    .then(async () => {
+        console.log(`Conectado a MongoDB (${mongoUri}/${mongoDbName})`);
+
+        try {
+            const dbCandidates = [mongoDbName, 'PlayAlmi', 'playAlmi'].filter((value, index, arr) => value && arr.indexOf(value) === index);
+            const collectionCandidates = ['users'];
+
+            for (const dbName of dbCandidates) {
+                const db = mongoose.connection.client.db(dbName);
+
+                for (const collectionName of collectionCandidates) {
+                    const count = await db.collection(collectionName).countDocuments({});
+                    console.log(`[Mongo check] ${dbName}.${collectionName} -> ${count} docs`);
+                }
+            }
+        } catch (checkErr) {
+            console.error('Error comprobando datos en MongoDB:', checkErr.message);
+        }
+    })
+    .catch(err => console.error('Error de conexion a MongoDB:', err.message));
+
+mongoose.connection.on('error', (err) => {
+    console.error('MongoDB error:', err.message);
+});
 
 var port = process.env.PORT || 8080;
 
