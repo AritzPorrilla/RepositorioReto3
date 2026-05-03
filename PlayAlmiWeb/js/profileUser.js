@@ -1,6 +1,6 @@
+const PROXY_API = window.PlayAlmiProxy;
 const API_GET_CANDIDATAS = [
-  './proxy-users.php',
-  'http://20.203.222.95:8080/api/users'
+  (PROXY_API && PROXY_API.getUsersUrl()) || 'http://20.203.222.95:8080/api/users'
 ];
 
 const PLAYALMI_SESSION_KEY = 'playalmi_active_user';
@@ -36,6 +36,14 @@ const btnEliminarCuenta = document.getElementById('btn-eliminar-cuenta');
 let usuariosCargados = [];
 let usuarioActivo = getActiveUser();
 let fotoPerfilPreferida = '';
+
+function requireProxyApi() {
+  if (PROXY_API) {
+    return PROXY_API;
+  }
+
+  throw new Error('Proxy API JavaScript no disponible. Revisa la carga de ./js/proxyApi.js');
+}
 
 function getActiveUser() {
   try {
@@ -256,34 +264,6 @@ async function fetchConFallback(urls, options) {
   throw ultimoError || new Error('No se pudo conectar con ninguna URL');
 }
 
-async function fetchConTimeout(url, options, timeoutMs = API_TIMEOUT_MS) {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
-
-  try {
-    return await fetch(url, {
-      ...options,
-      signal: controller.signal
-    });
-  } finally {
-    clearTimeout(timer);
-  }
-}
-
-function getUpdateUrls(userId, preferDirect = false) {
-  const proxyUrl = './proxy-update-user.php';
-  const directUrl = `http://20.203.222.95:8080/api/users/${encodeURIComponent(userId)}`;
-
-  return preferDirect ? [directUrl, proxyUrl] : [proxyUrl, directUrl];
-}
-
-function getDeleteUrls(userId) {
-  return [
-    './proxy-update-user.php',
-    `http://20.203.222.95:8080/api/users/${encodeURIComponent(userId)}`
-  ];
-}
-
 function leerArchivoComoDataUrl(archivo) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -342,51 +322,8 @@ async function actualizarPerfilRemoto(payloadBase) {
   }
 
   const hasPhotoPayload = Object.prototype.hasOwnProperty.call(payloadBase || {}, 'foto_perfil');
-  const updateUrls = getUpdateUrls(userId, false);
-  let resultado = null;
-  let ultimoError = null;
-
-  for (const url of updateUrls) {
-    try {
-      const body = url === './proxy-update-user.php'
-        ? JSON.stringify({ user_id: userId, ...payloadBase })
-        : JSON.stringify(payloadBase);
-
-      const response = await fetchConTimeout(url, {
-        method: url === './proxy-update-user.php' ? 'POST' : 'PUT',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body
-      }, hasPhotoPayload ? 7000 : API_TIMEOUT_MS);
-
-      if (!response.ok) {
-        const raw = await response.text();
-        let mensajeApi = '';
-
-        try {
-          const payloadError = JSON.parse(raw);
-          mensajeApi = String(payloadError?.message || payloadError?.error || '').trim();
-        } catch {
-          mensajeApi = String(raw || '').trim();
-        }
-
-        const error = new Error(mensajeApi || `Error HTTP ${response.status}`);
-        error.status = response.status;
-        throw error;
-      }
-
-      const data = await response.json();
-      resultado = { data, url, userId };
-      break;
-    } catch (error) {
-      ultimoError = error;
-    }
-  }
-
-  if (!resultado) {
-    throw ultimoError || new Error('No se pudo actualizar el perfil');
-  }
+  const api = requireProxyApi();
+  const resultado = await api.updateUser(userId, payloadBase, hasPhotoPayload ? 7000 : API_TIMEOUT_MS);
 
   setApiBaseUrlFromUrl(resultado.url);
 
@@ -410,32 +347,10 @@ async function eliminarCuentaRemota() {
     throw new Error('No se encontro el usuario activo para eliminar.');
   }
 
-  const deleteUrls = getDeleteUrls(userId);
-  let ultimoError = null;
-
-  for (const url of deleteUrls) {
-    try {
-      const response = await fetch(url, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ user_id: userId })
-      });
-
-      if (!response.ok) {
-        throw new Error(`Error HTTP ${response.status}`);
-      }
-
-      const data = await response.json();
-      setApiBaseUrlFromUrl(url);
-      return data;
-    } catch (error) {
-      ultimoError = error;
-    }
-  }
-
-  throw ultimoError || new Error('No se pudo eliminar la cuenta');
+  const api = requireProxyApi();
+  const resultado = await api.deleteUser(userId, API_TIMEOUT_MS);
+  setApiBaseUrlFromUrl(resultado.url);
+  return resultado.data;
 }
 
 function initFotoPerfil() {
@@ -587,8 +502,10 @@ async function cargarPerfil() {
   setPerfilEstado('Cargando perfil...');
 
   try {
-    const resultado = await fetchConFallback(API_GET_CANDIDATAS, { method: 'GET' });
-    const payload = resultado.payload;
+    const api = requireProxyApi();
+    const resultado = await api.getUsers(API_TIMEOUT_MS);
+    const payload = resultado.data;
+    setApiBaseUrlFromUrl(resultado.url);
     const usuarios = Array.isArray(payload?.data) ? payload.data : [];
     usuariosCargados = usuarios;
 

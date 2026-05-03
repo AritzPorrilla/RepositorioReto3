@@ -5,6 +5,9 @@ const User = require('./userModel');
 
 const PROFILE_IMAGE_DIR = '/var/www/html/fotoperfil';
 const PROFILE_IMAGE_ROUTE = '/fotoperfil';
+const CLOUDINARY_CLOUD_NAME = String(process.env.CLOUDINARY_CLOUD_NAME || 'dmxk5vgxe').trim();
+const CLOUDINARY_UPLOAD_PRESET = String(process.env.CLOUDINARY_UPLOAD_PRESET || 'Zomumba').trim();
+const CLOUDINARY_UPLOAD_URL = `https://api.cloudinary.com/v1_1/${encodeURIComponent(CLOUDINARY_CLOUD_NAME)}/image/upload`;
  
 function escapeRegex(value) {
     return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -24,6 +27,32 @@ function getImageExtension(mimeType) {
     if (normalized === 'image/avif') return 'avif';
 
     return 'png';
+}
+
+async function uploadDataImageToCloudinary(dataImage, username) {
+    if (!CLOUDINARY_CLOUD_NAME || !CLOUDINARY_UPLOAD_PRESET) {
+        return '';
+    }
+
+    const publicIdBase = normalizePhotoKey(username || 'perfil');
+    const formData = new FormData();
+    formData.append('file', dataImage);
+    formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+    formData.append('public_id', `${publicIdBase}-${Date.now()}`);
+    formData.append('folder', 'PlayAlmi/perfiles');
+
+    const response = await fetch(CLOUDINARY_UPLOAD_URL, {
+        method: 'POST',
+        body: formData
+    });
+
+    if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Cloudinary ${response.status}: ${errorText}`);
+    }
+
+    const payload = await response.json();
+    return String(payload.secure_url || payload.url || '').trim();
 }
  
 // Normaliza el valor de foto antes de guardarlo en MongoDB.
@@ -47,6 +76,15 @@ async function resolvePhotoValue(raw, username) {
     const match = value.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,(.+)$/);
     if (!match) {
         return value;
+    }
+
+    try {
+        const cloudinaryUrl = await uploadDataImageToCloudinary(value, username);
+        if (cloudinaryUrl) {
+            return cloudinaryUrl;
+        }
+    } catch (cloudErr) {
+        console.error('Error subiendo foto a Cloudinary, usando fallback local:', cloudErr.message);
     }
 
     const mimeType = match[1];

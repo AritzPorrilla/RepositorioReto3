@@ -1,6 +1,6 @@
+const PROXY_API = window.PlayAlmiProxy;
 const API_GET_CANDIDATAS = [
-    './proxy-users.php',
-    'http://20.203.222.95:8080/api/users',
+    (PROXY_API && PROXY_API.getUsersUrl()) || 'http://20.203.222.95:8080/api/users',
 ];
 
 const estado = document.getElementById('estado');
@@ -47,6 +47,14 @@ let rankingActual = [];
 let mostrarTodos = false;
 let usuariosCargados = [];
 let usuarioActivo = getActiveUser();
+
+function requireProxyApi() {
+    if (PROXY_API) {
+        return PROXY_API;
+    }
+
+    throw new Error('Proxy API JavaScript no disponible. Revisa la carga de ./js/proxyApi.js');
+}
 
 function getActiveUser() {
     try {
@@ -373,13 +381,6 @@ async function fetchConFallback(urls, options) {
     throw ultimoError || new Error('No se pudo conectar con ninguna URL');
 }
 
-function getUpdateUrls(userId) {
-    return [
-        './proxy-update-user.php',
-        `http://20.203.222.95:8080/api/users/${encodeURIComponent(userId)}`,
-    ];
-}
-
 function initFotoPerfil() {
     if (!perfilFotoInput || !perfilFotoMsg) return;
 
@@ -474,7 +475,6 @@ function initPerfilForm() {
         }
 
         try {
-            const updateUrls = getUpdateUrls(userId);
             const payloadBase = {
                 username: nuevoUsername,
             };
@@ -483,41 +483,9 @@ function initPerfilForm() {
                 payloadBase.password = nuevoPassword;
             }
 
-            let resultado = null;
-            let ultimoError = null;
-
-            for (const url of updateUrls) {
-                try {
-                    const body = url === './proxy-update-user.php'
-                        ? JSON.stringify({ user_id: userId, ...payloadBase })
-                        : JSON.stringify({ authenticatedUserId: userId, ...payloadBase });
-
-                    const response = await fetch(url, {
-                        method: url === './proxy-update-user.php' ? 'POST' : 'PUT',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body
-                    });
-
-                    if (!response.ok) {
-                        throw new Error(`Error HTTP ${response.status}`);
-                    }
-
-                    const data = await response.json();
-                    resultado = {
-                        data,
-                        url
-                    };
-                    break;
-                } catch (error) {
-                    ultimoError = error;
-                }
-            }
-
-            if (!resultado) {
-                throw ultimoError || new Error('No se pudo actualizar el perfil');
-            }
+            const api = requireProxyApi();
+            const resultado = await api.updateUser(userId, payloadBase);
+            setApiBaseUrlFromUrl(resultado.url);
 
             const usuarioActualizado = resultado.data?.data || {};
             const oldPhotoKey = getPhotoStorageKey(usernameActual);
@@ -558,8 +526,10 @@ async function cargarUsuarios() {
     contenido.style.display = 'none';
 
     try {
-        const resultado = await fetchConFallback(API_GET_CANDIDATAS, { method: 'GET' });
-        const payload = resultado.payload;
+        const api = requireProxyApi();
+        const resultado = await api.getUsers();
+        const payload = resultado.data;
+        setApiBaseUrlFromUrl(resultado.url);
         const usuarios = Array.isArray(payload?.data) ? payload.data : [];
         usuariosCargados = usuarios;
 

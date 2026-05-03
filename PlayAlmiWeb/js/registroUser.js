@@ -1,9 +1,4 @@
-const API_POST_CANDIDATAS = [
-  './proxy-create-user.php',
-  'http://20.203.222.95:8080/api/users'
-];
-
-const API_GET_USERS = ['./proxy-users.php', 'http://20.203.222.95:8080/api/users'];
+const PROXY_API = window.PlayAlmiProxy;
 
 const formRegistro = document.getElementById('form-registro');
 const formLogin = document.getElementById('form-login');
@@ -16,6 +11,14 @@ const API_TIMEOUT_MS = 10000;
 const LAST_OK_POST_USERS_KEY = 'playalmi_last_ok_post_users';
 const LAST_OK_GET_USERS_KEY = 'playalmi_last_ok_get_users';
 const INLINE_PHOTO_PREFIX = 'playalmi-inline-image::';
+
+function requireProxyApi() {
+  if (PROXY_API) {
+    return PROXY_API;
+  }
+
+  throw new Error('Proxy API JavaScript no disponible. Revisa la carga de ./js/proxyApi.js');
+}
 
 function empaquetarFotoParaApi(value) {
   const texto = String(value || '').trim();
@@ -308,87 +311,17 @@ async function resolverFotoPerfilRegistro() {
 }
 
 async function postConFallback(payload) {
-  let ultimoError = null;
-  const candidatas = ordenarCandidatas(API_POST_CANDIDATAS, LAST_OK_POST_USERS_KEY);
-
-  for (const url of candidatas) {
-    try {
-      const response = await fetchConTimeout(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(payload)
-      }, API_TIMEOUT_MS);
-
-      const raw = await response.text();
-      let data;
-
-      try {
-        data = JSON.parse(raw);
-      } catch {
-        throw new Error(`Respuesta no JSON desde ${url}`);
-      }
-
-      if (!response.ok) {
-        const mensajeApi = String(data?.message || data?.error || '').trim();
-        const error = new Error(mensajeApi || `Error HTTP ${response.status}`);
-        error.status = response.status;
-        throw error;
-      }
-
-      guardarUltimaUrlOk(LAST_OK_POST_USERS_KEY, url);
-      return { data, url };
-    } catch (error) {
-      if (String(error?.name || '') === 'AbortError') {
-        ultimoError = new Error(`Tiempo de espera agotado al conectar con ${url}`);
-      } else if (String(error?.name || '') === 'TypeError') {
-        ultimoError = new Error(`Fallo de red al conectar con ${url}`);
-      } else {
-        ultimoError = error;
-      }
-    }
-  }
-
-  throw ultimoError || new Error('No se pudo enviar a ninguna URL de API');
+  const api = requireProxyApi();
+  const resultado = await api.createUser(payload, API_TIMEOUT_MS);
+  guardarUltimaUrlOk(LAST_OK_POST_USERS_KEY, resultado.url);
+  return { data: resultado.data, url: resultado.url };
 }
 
 async function cargarUsuariosExistentes() {
-  let ultimoError = null;
-  const candidatas = ordenarCandidatas(API_GET_USERS, LAST_OK_GET_USERS_KEY);
-
-  for (const url of candidatas) {
-    try {
-      const response = await fetchConTimeout(url, { method: 'GET' }, API_TIMEOUT_MS);
-      if (!response.ok) {
-        const error = new Error(`Error HTTP ${response.status}`);
-        error.status = response.status;
-        throw error;
-      }
-
-      const raw = await response.text();
-      let payload;
-
-      try {
-        payload = JSON.parse(raw);
-      } catch {
-        throw new Error(`Respuesta no JSON desde ${url}`);
-      }
-
-      guardarUltimaUrlOk(LAST_OK_GET_USERS_KEY, url);
-      return Array.isArray(payload?.data) ? payload.data : [];
-    } catch (error) {
-      if (String(error?.name || '') === 'AbortError') {
-        ultimoError = new Error(`Tiempo de espera agotado al conectar con ${url}`);
-      } else if (String(error?.name || '') === 'TypeError') {
-        ultimoError = new Error(`Fallo de red al conectar con ${url}`);
-      } else {
-        ultimoError = error;
-      }
-    }
-  }
-
-  throw ultimoError || new Error('No se pudo consultar usuarios existentes');
+  const api = requireProxyApi();
+  const resultado = await api.getUsers(API_TIMEOUT_MS);
+  guardarUltimaUrlOk(LAST_OK_GET_USERS_KEY, resultado.url);
+  return Array.isArray(resultado?.data?.data) ? resultado.data.data : [];
 }
 
 if (formRegistro) {
@@ -552,16 +485,13 @@ if (formLogin) {
     feedback.style.display = 'none';
     limpiarErroresLogin();
 
-    const MENSAJE_LOGIN_INVALIDO = 'Usuario o contraseña incorrectos';
+    const MENSAJE_LOGIN_INVALIDO = 'Usuario o contrasena incorrectos';
     const MENSAJE_LOGIN_CONEXION = 'No se pudo conectar con la API';
 
     try {
-      const usuarios = await cargarUsuariosExistentes();
-      const usuario = usuarios.find((item) => String(item?.username || '').trim().toLowerCase() === username.toLowerCase());
-
-      if (!usuario || String(usuario.password || '') !== password) {
-        throw new Error(MENSAJE_LOGIN_INVALIDO);
-      }
+      const api = requireProxyApi();
+      const loginResult = await api.login({ username, password }, API_TIMEOUT_MS);
+      const usuario = loginResult?.data?.data || {};
 
       setActiveUser({
         id: usuario._id || '',
@@ -578,7 +508,7 @@ if (formLogin) {
       limpiarErroresLogin();
       setTimeout(irARanking, 350);
     } catch (error) {
-      const esConexion = String(error?.message || '').toLowerCase().includes('no se pudo consultar usuarios');
+      const esConexion = Number(error?.status || 0) !== 401;
       const mensaje = esConexion ? MENSAJE_LOGIN_CONEXION : MENSAJE_LOGIN_INVALIDO;
       statusRegistro.textContent = esConexion ? 'Error de conexion con API' : 'No se pudo iniciar sesion';
       loginUsernameInput?.classList.add('input-error');
