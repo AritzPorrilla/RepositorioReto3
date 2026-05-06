@@ -12,7 +12,10 @@ router.route('/users')
  
 router.route('/users/kills/:kills')
     .get(userController.viewgenero);
- 
+
+router.route('/ranking')
+    .get(userController.ranking);
+
 router.route('/users/:user_id')
     .get(userController.view)
     .put(userController.update)

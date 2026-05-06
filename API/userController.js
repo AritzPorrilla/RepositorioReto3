@@ -240,3 +240,14 @@ exports.viewgenero = async function (req, res) {
         res.status(500).json({ status: 'error', message: 'Error fetching users', error: err.message });
     }
 };
+
+// GET /api/ranking
+exports.ranking = async function (req, res) {
+    try {
+        const users = await User.find().sort({ puntos: -1 }).exec();
+        if (!users.length) return res.status(404).json({ status: 'error', message: 'No users found' });
+        res.json({ status: 'success', message: 'Global ranking', data: users });
+    } catch (err) {
+        res.status(500).json({ status: 'error', message: 'Error fetching ranking', error: err.message });
+    }
+};
