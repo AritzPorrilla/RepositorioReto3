@@ -201,12 +201,6 @@ exports.update = async function (req, res) {
     try {
         const user = await User.findById(req.params.user_id);
         if (!user) return res.status(404).json({ status: 'error', message: 'User not found' });
- 
-        // Validar que el usuario autenticado sea el dueño del perfil
-        const authenticatedUserId = req.body.authenticatedUserId;
-        if (!authenticatedUserId || authenticatedUserId !== req.params.user_id) {
-            return res.status(403).json({ status: 'error', message: 'No puedes editar el perfil de otro usuario' });
-        }
 
         const body = req.body;
         if ('username'          in body) user.username          = body.username;
@@ -228,12 +222,6 @@ exports.delete = async function(req, res) {
     try {
         const user = await User.findById(req.params.user_id);
         if (!user) return res.status(404).json({ status: 'error', message: 'User not found' });
-
-        // Validar que el usuario autenticado sea el dueño del perfil
-        const authenticatedUserId = req.body.authenticatedUserId;
-        if (!authenticatedUserId || authenticatedUserId !== req.params.user_id) {
-            return res.status(403).json({ status: 'error', message: 'No puedes borrar el perfil de otro usuario' });
-        }
 
         await User.findByIdAndDelete(req.params.user_id);
         res.json({ status: 'Success', message: 'User deleted' });
