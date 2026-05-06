@@ -544,11 +544,11 @@ async function cargarUsuarios() {
         mostrarTodos = false;
         renderTabla(usuarios);
         totalUsuarios.textContent = String(usuarios.length);
-        statusText.textContent = 'API conectada';
+        statusText.textContent = 'Conectado';
         estado.style.display = 'none';
         contenido.style.display = 'block';
     } catch (error) {
-        statusText.textContent = 'API sin conexion';
+        statusText.textContent = 'Sin conexion';
         estado.innerHTML = `<p style="color:#ff8b8b;">Error al cargar usuarios: ${escapeHtml(error.message)}. Revisa CORS/puerto 8080 o que la API este encendida.</p>`;
         contenido.style.display = 'none';
         console.error('Error al cargar usuarios:', error);

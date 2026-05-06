@@ -48,7 +48,7 @@ function validarProtocoloApiCompatible() {
     return true;
   }
 
-  statusRegistro.textContent = 'Error de conexion con API';
+  //statusRegistro.textContent = 'Error de conexion con API';
   mostrarFeedback('La API solo responde por HTTP. Abre la web en HTTP (no HTTPS) o usa un proxy backend.', 'error');
   return false;
 }
@@ -340,7 +340,7 @@ formRegistro.addEventListener('submit', async (event) => {
     return;
   }
 
-  statusRegistro.textContent = 'Enviando a API...';
+  //statusRegistro.textContent = 'Enviando a API...';
   feedback.style.display = 'none';
 
   const fechaLanzamiento = new Date().toISOString();
@@ -435,7 +435,7 @@ formRegistro.addEventListener('submit', async (event) => {
       return;
     }
 
-    statusRegistro.textContent = 'Error de conexion con API';
+    //statusRegistro.textContent = 'Error de conexion con API';
     const mensajeError = String(error?.message || 'Error desconocido');
     if (isFileProtocol()) {
       mostrarFeedback(`No se pudo crear el jugador: ${mensajeError}. Abre la web desde un servidor (por ejemplo Apache/XAMPP o Live Server).`, 'error');

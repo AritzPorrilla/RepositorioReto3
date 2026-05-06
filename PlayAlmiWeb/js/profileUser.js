@@ -36,6 +36,7 @@ const btnEliminarCuenta = document.getElementById('btn-eliminar-cuenta');
 let usuariosCargados = [];
 let usuarioActivo = getActiveUser();
 let fotoPerfilPreferida = '';
+let confirmacionEliminarCuenta = null;
 
 function requireProxyApi() {
   if (PROXY_API) {
@@ -78,6 +79,79 @@ function clearStoredProfilePhotos() {
 
 function enviarARegistro() {
   window.location.href = './registro.html';
+}
+
+function ocultarConfirmacionEliminarCuenta() {
+  if (confirmacionEliminarCuenta) {
+    confirmacionEliminarCuenta.hidden = true;
+  }
+}
+
+function mostrarConfirmacionEliminarCuenta() {
+  if (!perfilForm) return;
+
+  if (!confirmacionEliminarCuenta) {
+    const contenedor = document.createElement('div');
+    contenedor.className = 'perfil-delete-confirm';
+    contenedor.hidden = true;
+    contenedor.innerHTML = `
+      <div>
+        <p class="perfil-delete-confirm-title">Eliminar cuenta</p>
+        <p class="perfil-delete-confirm-text">Esta accion borrara tu perfil de forma definitiva. No podras recuperarlo despues.</p>
+      </div>
+      <div class="perfil-delete-confirm-actions">
+        <button type="button" class="ghost" data-delete-cancelar>Cancelar</button>
+        <button type="button" class="perfil-delete-btn" data-delete-confirmar>Si, eliminar</button>
+      </div>
+    `;
+
+    const accionesPerfil = document.querySelector('.perfil-actions');
+    if (accionesPerfil?.parentNode) {
+      accionesPerfil.insertAdjacentElement('afterend', contenedor);
+    } else {
+      perfilForm.appendChild(contenedor);
+    }
+
+    const btnCancelar = contenedor.querySelector('[data-delete-cancelar]');
+    const btnConfirmar = contenedor.querySelector('[data-delete-confirmar]');
+
+    btnCancelar?.addEventListener('click', (event) => {
+      event.preventDefault();
+      ocultarConfirmacionEliminarCuenta();
+      setPerfilEstado('Eliminacion cancelada.');
+    });
+
+    btnConfirmar?.addEventListener('click', async (event) => {
+      event.preventDefault();
+      ocultarConfirmacionEliminarCuenta();
+
+      btnEliminarCuenta.disabled = true;
+      if (btnGuardarPerfil) {
+        btnGuardarPerfil.disabled = true;
+      }
+
+      setPerfilEstado('Eliminando cuenta...');
+
+      try {
+        await eliminarCuentaRemota();
+        clearStoredProfilePhotos();
+        clearActiveUser();
+        fotoPerfilPreferida = '';
+        enviarARegistro();
+      } catch (error) {
+        setPerfilEstado(`No se pudo eliminar la cuenta: ${error.message}`, 'error');
+        btnEliminarCuenta.disabled = false;
+        if (btnGuardarPerfil) {
+          btnGuardarPerfil.disabled = false;
+        }
+      }
+    });
+
+    confirmacionEliminarCuenta = contenedor;
+  }
+
+  confirmacionEliminarCuenta.hidden = false;
+  setPerfilEstado('Confirma si quieres eliminar la cuenta.', 'error');
 }
 
 function getPhotoStorageKey(username) {
@@ -537,39 +611,16 @@ if (btnLogout) {
 }
 
 if (btnEliminarCuenta) {
-  btnEliminarCuenta.addEventListener('click', async () => {
+  btnEliminarCuenta.addEventListener('click', (event) => {
+    event.preventDefault();
+
     const username = String(usuarioActivo?.username || '').trim();
     if (!username) {
       setPerfilEstado('No hay una cuenta activa para eliminar.', 'error');
       return;
     }
 
-    const confirmado = window.confirm('Esta accion eliminara tu cuenta de forma definitiva. \u00bfQuieres continuar?');
-    if (!confirmado) {
-      return;
-    }
-
-    btnEliminarCuenta.disabled = true;
-    if (btnGuardarPerfil) {
-      btnGuardarPerfil.disabled = true;
-    }
-
-    setPerfilEstado('Eliminando cuenta...');
-
-    try {
-      await eliminarCuentaRemota();
-      clearStoredProfilePhotos();
-      clearActiveUser();
-      fotoPerfilPreferida = '';
-      enviarARegistro();
-    } catch (error) {
-      setPerfilEstado(`No se pudo eliminar la cuenta: ${error.message}`, 'error');
-    } finally {
-      btnEliminarCuenta.disabled = false;
-      if (btnGuardarPerfil) {
-        btnGuardarPerfil.disabled = false;
-      }
-    }
+    mostrarConfirmacionEliminarCuenta();
   });
 }
 
